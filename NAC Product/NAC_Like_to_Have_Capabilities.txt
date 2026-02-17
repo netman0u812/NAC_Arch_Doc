@@ -1,0 +1,12 @@
+Like-to-Have Capability List for NAC Solutions
+
+1. User behavior profiling and anomaly detection
+2. Transaction rate and data volume monitoring
+3. Integration with UEBA platforms (e.g., Exabeam)
+4. Support for dissolvable posture agents
+5. Custom remediation scripting capabilities
+6. GraphQL and OpenAPI support for modern integrations
+7. Integration with SOAR platforms for automated incident response
+8. Visual compliance portals for end users
+9. Threat-centric NAC with CVSS-based policy triggers
+10. Support for machine-readable threat feeds

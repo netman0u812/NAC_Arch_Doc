@@ -1,0 +1,68 @@
+Access Control (AC-3, AC-17): NAC enforces access policies ensuring only authorized devices/users can connect. / NAC enforces identity-based and role-based access policies.
+
+Identification and Authentication (IA-2): NAC integrates with identity systems to verify device/user credentials. / Integration with identity providers (IdPs) for adaptive access.
+
+System and Communications Protection (SC-7): NAC helps isolate and control traffic between network segments. 
+
+Audit and Accountability (AU-2, AU-12): NAC logs access attempts and device behavior for auditing. 
+
+Configuration Management (CM-7): NAC ensures devices meet baseline configurations before access is granted. / Require endpoint compliance checks before granting access. / Helps mitigate risks by preventing non-compliant or vulnerable devices from connecting.
+
+Enforcing authentication protocols. 
+
+Restricting unauthorized device access. / Support for phishing-resistant MFA, Just-In-Time (JIT) access, and role-based access control (RBAC).
+
+Tracking user activity across the network / Providing visibility into network activity. / Assign network access based on user roles and least privilege principles.
+
+Ensuring only compliant devices access sensitive systems. / Ensures only authorized users and devices can access network resources. / NAC continuously monitors device compliance and network activity.
+
+Segmenting of managed,  guest and contractor access  / Supporting data protection through segmentation and authentication
+
+Supporting audit trails for access events
+
+Enforcing device-level access policies. / Dynamic access policies based on identity and device posture
+
+NAC evaluates the security posture of devices before granting access.
+
+NAC provides visibility into all connected devices.
+
+Helps maintain an accurate inventory of assets, including BYOD and IoT.
+
+NAC detects anomalous behavior and unauthorized access attempts.
+
+Facilitates rapid response and containment of security incidents.
+
+
+Only approved people and devices can connect to the network based on who they are and their role.
+
+Before allowing access, the system checks your identity using trusted login systems.
+
+The network is divided into zones so different users only access what they need.
+
+All connection attempts and device actions are recorded for future review.
+
+Devices must meet safety standards like having antivirus and updates before connecting.
+
+The system checks login details to confirm identity before allowing access.
+
+Only trusted devices and users are allowed, using strong login methods and temporary access when needed.
+
+The system watches what users and devices do on the network and limits access based on roles.
+
+Only safe and approved devices can access sensitive parts of the network, and they are constantly monitored.
+
+Different types of users like guests and employees get access to different parts of the network.
+
+The system keeps a history of who accessed what and when.
+
+Access rules change depending on who you are and the condition of your device.
+
+The system checks if a device is safe before letting it connect.
+
+Shows all devices currently connected to the network.
+
+Keeps a list of all devices including personal and smart devices.
+
+Spots unusual behavior and blocks suspicious devices.
+
+Helps quickly respond to and fix security problems.

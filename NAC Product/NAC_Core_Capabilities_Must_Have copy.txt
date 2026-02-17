@@ -1,0 +1,13 @@
+Core Capability Must-Have List for NAC Solutions
+
+1. Agentless device visibility and profiling
+2. Support for wired NAC including 802.1X, MAB, and switch port control
+3. Granular access control based on identity and posture
+4. Integration with MDM platforms for compliance enforcement
+5. Integration with EDR platforms for threat response
+6. Posture assessment with automatic and manual remediation
+7. API support for automation and external platform integration
+8. Ability to consume third-party threat intelligence feeds
+9. Local policy enforcement based on threat data
+10. Scalable architecture with high availability support
+11. Compliance reporting and audit capabilities

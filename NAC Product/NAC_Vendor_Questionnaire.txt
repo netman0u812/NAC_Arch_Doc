@@ -1,0 +1,54 @@
+Network Access Control (NAC) Vendor Questionnaire
+
+Please provide detailed responses to the following questions to help us evaluate your NAC solution:
+
+1. General Capabilities
+   - Describe your NAC architecture (agent-based, agentless, hybrid).
+   - What platforms and operating systems are supported?
+   - How does your solution handle wired and wireless NAC?
+
+2. Device Visibility and Profiling
+   - What methods are used for device discovery and classification?
+   - Can your solution identify IoT, OT, and medical devices?
+   - How is device posture assessed?
+
+3. Access Control and Policy Enforcement
+   - Describe your support for 802.1X, MAC Authentication Bypass, and WebAuth.
+   - How are policies defined and enforced?
+   - Can your solution dynamically assign VLANs or ACLs?
+
+4. Integration Capabilities
+   - List supported MDM platforms and integration methods.
+   - Describe integration with EDR, SIEM, SOAR, and threat intelligence platforms.
+   - Can your solution consume third-party threat feeds and apply local policy?
+
+5. Posture Assessment and Remediation
+   - What posture agents are available (persistent, dissolvable, agentless)?
+   - What posture conditions can be evaluated?
+   - Describe remediation workflows (automatic/manual).
+
+6. Behavioral Monitoring and Analytics
+   - Does your solution support user behavior profiling?
+   - Can it monitor transaction rates, data volumes, or application usage?
+   - What external platforms are supported for analytics?
+
+7. API and Automation
+   - Describe available APIs (REST, GraphQL, Webhooks).
+   - Can your solution integrate with transaction/data monitoring platforms via API?
+   - Provide examples of automation workflows.
+
+8. Threat Response
+   - How does your solution respond to threat alerts from third-party platforms?
+   - Can it quarantine or isolate endpoints based on threat intelligence?
+   - Describe enforcement mechanisms (SGTs, dACLs, VLANs, scripts).
+
+9. Scalability and Deployment
+   - What is the recommended architecture for large environments?
+   - How is high availability and redundancy handled?
+   - Describe deployment complexity and onboarding process.
+
+10. Compliance and Reporting
+    - What compliance standards are supported (HIPAA, PCI-DSS, NIST)?
+    - Describe reporting and audit capabilities.
+    - Can users view and manage their compliance status?
+
