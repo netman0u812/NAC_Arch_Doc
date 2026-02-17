@@ -1,0 +1,75 @@
+# Forescout CLI Troubleshooting Cheat Sheet
+
+---
+
+## **Accessing FS-CLI**
+ssh cliadmin@<appliance>
+fstool cli
+
+---
+
+## **Basic Navigation**
+- ? – List all available FS-CLI commands
+- exit – Exit FS-CLI and return to Bash shell
+- shell – Switch from FS-CLI to Bash
+
+---
+
+## **System Information & Logs**
+- fstool sysinfo stats – Collect historical system statistics (CSV output)
+- fstool tech-support – Gather logs and diagnostic data for support
+- list <path> – List log directories or configuration files
+
+---
+
+## **Date & Time**
+- date – Display or set system clock
+
+---
+
+## **DNS Configuration**
+- dns list – Show DNS server settings
+- dns set <server> – Configure DNS server
+
+---
+
+## **Engine Control**
+- engine status – Check packet engine status
+- engine restart – Restart packet engine
+
+---
+
+## **File & Directory Management**
+- clear_shared – Clear shared directories (free disk space)
+
+---
+
+## **Security & Keys**
+- fingerprintkey – Verify integrity of device signature keys
+
+---
+
+## **Installation & Setup**
+- fstool cli install – Enable FS-CLI mode if not installed
+
+---
+
+### **Typical Troubleshooting Workflow**
+1. Access FS-CLI
+   ssh cliadmin@<appliance>
+   fstool cli
+2. Check system status
+   date
+   dns list
+3. Inspect engine behavior
+   engine status
+4. Gather performance data
+   fstool sysinfo stats
+   fstool tech-support
+5. Review logs and directories
+   list /path/to/logs
+   clear_shared
+
+---
+
+Tip: Always run fstool tech-support before escalating issues to Forescout Support.

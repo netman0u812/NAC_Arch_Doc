@@ -1,0 +1,30 @@
+AAA Command Authorization Template for Cisco IOS
+
+# AAA Configuration
+aaa new-model
+aaa authentication login default group tacacs+ local
+aaa authorization exec default group tacacs+ local
+aaa authorization commands 15 default group tacacs+ local
+aaa accounting commands 15 default start-stop group tacacs+
+
+# Forescout Required Commands
+show interfaces status
+show vlan brief
+show dot1x interface
+show port-security
+show port-security interface
+show running-config
+interface
+switchport mode access
+switchport access vlan
+switchport trunk allowed vlan
+shutdown
+no shutdown
+authentication port-control auto
+dot1x re-authenticate
+switchport port-security
+switchport port-security maximum
+switchport port-security violation
+errdisable recovery cause security-violation
+spanning-tree portfast
+storm-control broadcast level
