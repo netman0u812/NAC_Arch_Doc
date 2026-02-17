@@ -1,0 +1,68 @@
+
+Technical Architecture: Forescout‑Orchestrated NAC with Continuous Monitoring (NAC+CM)
+
+**Update: DHCP ingestion paths incorporated** — Forescout ingests DHCP context through: (a) direct DHCP fingerprinting/packet inspection, (b) syslog‑forwarded DHCP lease events from DHCP servers, and (c) DHCP snooping/binding tables retrieved from switches via SNMP/API. These sources enhance MAC→IP→Port correlation and device classification. [Citations: dhclasstest fingerprinting; Syslog Plugin; Documentation Portal for switch integrations]
+
+Actors & Roles
+- Forescout Platform (Enterprise Manager + Appliances): Device discovery, classification (incl. DHCP fingerprints), policy engine (PDP), integration hub, RADIUS/CoA where applicable.  
+- Cisco Catalyst Access Switches: Enforcement point (PEP) for wired—MAB, VLAN/dACL/SGT, SNMP set/CLI/API operations; RADIUS accounting + CoA; source of DHCP snooping/binding data.  
+- Cisco Wireless (WLC + ISE): Enforcement point for wireless—802.1X (EAP‑TLS machine certs), dynamic roles/VLAN/dACL; CoA.  
+- Endpoints: Managed Windows/macOS workstations with SecureConnector + CrowdStrike + Tanium + Qualys; enrolled in Intune (Windows) or Jamf (macOS).  
+- Integrations (eyeExtend / APIs): CrowdStrike Falcon, Tanium, Qualys VM, Microsoft Intune/Entra, Jamf, Cisco DNAC/ISE, firewalls (optional).  
+
+Data & Control Planes
+1) **Discovery/Inventory & DHCP Ingestion**  
+   - **Direct DHCP fingerprinting**: Forescout’s packet engine parses DHCP options (e.g., Option 55/60) from observed traffic (SPAN/TAP), aiding OS/vendor profiling. [Supports: "dhclasstest" CLI utility]  
+   - **DHCP via Syslog**: DHCP servers/relays forward lease events (DISCOVER/OFFER/REQUEST/ACK/RELEASE) to Forescout via the **Syslog Plugin** for normalization and correlation.  
+   - **DHCP snooping/bindings from switches**: Via SNMP/API polling, Forescout ingests switch DHCP snooping binding tables (MAC, IP, VLAN, interface) to strengthen MAC→IP→Port accuracy.  
+2) Admission Decision  
+   - Wired: Catalyst initiates **MAB** → RADIUS to Forescout (or proxy). Forescout evaluates MAC + device record + **DHCP‑derived identity (fingerprints/bindings)** + integration posture.  
+   - Wireless: ISE authenticates with EAP‑TLS. Forescout subscribes to session/posture context and enforces via CoA through ISE/WLC.  
+3) Enforcement  
+   - Forescout never blocks traffic itself; it instructs the switch/WLC (and optionally firewalls/SDN) to apply VLAN, role, dACL/SGT, or port state. CoA rebinds authorization dynamically.  
+4) Continuous Validation  
+   - Event streams from agents/MDM/VM + **DHCP change events** trigger re‑evaluation; Forescout issues CoA to update network authorization in near‑real time.  
+
+Minimum Compliance Gate (all must be true)
+- SecureConnector installed and healthy.  
+- CrowdStrike sensor installed, running, and communicating.  
+- Tanium client online with recent check‑in.  
+- Qualys agent installed and reporting.  
+- Device enrolled and compliant in MDM: Jamf (macOS) or Intune (Windows).  
+
+Wired Flow Details (without 802.1X)
+- Catalyst port in access/multi‑auth mode with MAB + RADIUS to Forescout; **pre‑connect VLAN/dACL** restricts to remediation services.  
+- Forescout evaluates posture via agent telemetry and integrations, **correlating MAC/IP using DHCP fingerprints, syslog lease events, and switch DHCP snooping bindings**.  
+- If compliant → RADIUS CoA from Forescout to switch to assign production VLAN/role/dACL; if not → remain in remediation. Optional SNMP set can also move VLAN or apply port ACL if RADIUS is not available.  
+
+Wireless Flow Details (with ISE)
+- Supplicant uses EAP‑TLS (machine cert) to ISE; WLC authorizes into default role.  
+- Forescout correlates posture; if non‑compliant/high‑risk, Forescout sends CoA (via ISE) to move to quarantine role/VLAN/dACL; restore on recovery.  
+
+Event Sources for Continuous Validation
+- CrowdStrike findings (sensor unhealthy, tamper, IOC/IOA alerts)  
+- Tanium compliance / last check‑in  
+- Qualys VM (critical exploitable vuln window breach)  
+- Jamf/Intune (unenroll, non‑compliant)  
+- Agent health (SecureConnector disconnected)  
+- **DHCP events (new IP, lease renewals, anomalous churn) from syslog and switch snooping tables**  
+
+Control Targets
+- Catalyst Switch: VLAN move, dACL apply, SGT/role tag, port shutdown/bounce, storm‑control and port‑security adjustments.  
+- WLC/ISE: Role/VLAN/dACL change via CoA.  
+- Firewall/SDN (optional): Tag‑based quarantine or micro‑segmentation.  
+
+Reliability & Security Considerations
+- High availability: multiple Forescout appliances behind Enterprise Manager; redundant RADIUS; switch CoA sessions validated.  
+- AuthZ safety nets: default pre‑connect ACL permits only DHCP/DNS/NTP/PKI, MDM/EDR/VM endpoints, and Forescout/ISE.  
+- MAB spoofing mitigations: port‑security, DHCP snooping + IP Source Guard, DAI; monitor for duplicate MAC use; tie device records to switch/port and anomaly‑score moves.  
+- Change governance: template‑based profiles per site; pre‑prod validation of CoA and dACLs; integration health SLAs.  
+
+Outcome
+- Admission based on identity + posture + **DHCP‑correlated context**, enforced on switches/WLC.  
+- Continuous validation with automated containment and auto‑restore to minimize MTTR.
+
+Citations:
+- DHCP fingerprinting / dhclasstest reference (platform CLI): turn4search45  
+- Syslog Plugin/event ingestion for server‑forwarded DHCP messages: turn4search44  
+- Switch/DHCP snooping & general integration references via documentation portal (Switch plugin & guides): turn4search49

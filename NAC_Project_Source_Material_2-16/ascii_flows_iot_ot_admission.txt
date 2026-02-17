@@ -1,0 +1,116 @@
+
+ASCII FLOWS: IoT & OT Admission with Forescout (eyeSight / eyeInspect)
+
+Legend
+- PDP: Policy Decision Point (Forescout platform)
+- PEP: Policy Enforcement Point (switch/WLC/firewall/SDN)
+- CoA: RADIUS Change of Authorization
+- DCHP*: DHCP fingerprints/leases; Snooping: switch binding tables
+- DPL: Forescout Device Profile Library (classification)
+
+------------------------------------------------------------
+Flow A — IoT (Wired) Admission via Catalyst (MAB)
+
+[IoT Endpoint]
+    |
+    | 1) Link-up (no 802.1X supplicant)
+    v
+[Access Switch/PEP]
+    |
+    | 2) MAB → RADIUS Access-Request (Identity=MAC)
+    v
+[Forescout PDP]
+    | 3) Correlate context:
+    |    - DPL classification (fingerprints)
+    |    - DHCP* (fingerprints/leases) + Snooping (MAC↔IP↔Port)
+    |    - Switch SNMP (port/VLAN/LLDP) / optional site maps
+    | 4) Evaluate admission policy for device-type (IoT)
+    |    - Known model/firmware?  Approved purpose/location?
+    |    - Any KEV/Vedere Labs risk flags?
+    |    - Site rules (DMZ/segmentation availability)?
+    |
+    | 5a) NON‑COMPLIANT / UNKNOWN
+    |     → RADIUS Access-Accept (Remediation dACL/VLAN)
+    |     → Allow minimal services (DHCP/DNS/NTP/asset portal)
+    |     → Notify Ops; start onboarding workflow
+    |
+    | 5b) COMPLIANT / KNOWN
+    |     → RADIUS Access-Accept (Production dACL/VLAN/SGT/role)
+    |     → (optional) immediate CoA to tighten role
+    v
+[Access Switch/PEP]
+    |
+    | 6) Enforce VLAN/role/dACL on the port (traffic control is on the switch)
+    v
+[Network]
+
+Post‑admission continuous validation (event‑driven):
+- DHCP change, device drift, threat intel (KEV/Vedere Labs) → CoA to restrict/isolate
+
+------------------------------------------------------------
+Flow B — IoT (Wireless) Admission via WLC / ISE (EAP‑TLS or MAC Auth)
+
+             ┌───────────────────────────────────────────────┐
+             │ If device supports 802.1X/EAP‑TLS (preferred) │
+             └───────────────────────────────────────────────┘
+[IoT Supplicant] --EAP‑TLS--> [WLC] --RADIUS--> [ISE]
+    |                                         (authZ: default WLAN role)
+    v
+[Forescout PDP]
+    | Correlate DPL classification + DHCP* + session context
+    | Evaluate device-type policy & risk intel
+    |--Non‑compliant/high‑risk--> CoA via ISE → quarantine WLAN role/VLAN
+    |--Compliant---------------> keep/upgrade to least‑privilege WLAN role
+
+             ┌───────────────────────────────────────────────┐
+             │ If device lacks 802.1X (headless IoT)         │
+             └───────────────────────────────────────────────┘
+[IoT Endpoint] --MAC auth (WLC/RADIUS)--> [Forescout PDP]
+    | Same evaluation as above → assign restricted IoT role by default
+    | Promote only after classification and site policy checks
+
+Enforcement reminder: WLC applies role/VLAN/dACL; Forescout orchestrates decisions.
+
+------------------------------------------------------------
+Flow C — OT Admission (Zones & Conduits, Passive by Default)
+
+Scenario: New OT asset (PLC/HMI) OR vendor laptop requiring temporary access
+
+[A] New OT Asset (PLC/HMI)
+
+[OT Asset Powered] --(Process traffic visible via SPAN/TAP)--> [eyeInspect Sensor]
+    |
+    | 1) Passive discovery & protocol fingerprinting (Modbus/S7/BACnet/DNP3)
+    | 2) Asset record built (make/model/fw, location, comms peers)
+    v
+[Forescout PDP]
+    | 3) Map to IEC‑62443 Zone (e.g., Cell/Area) and required Conduits
+    | 4) Approvals: change record, safety/ops review, maintenance window
+    | 5) Generate/enforce policies on PEPs:
+    |    - OT firewall/SDN: allow‑list Conduits (ports/protocols, peers)
+    |    - Switch/WLC: local VLAN/role as needed
+    v
+[PEPs: OT Firewalls/SDN/Switches]
+    | 6) Enforce conduits (default‑deny between zones)
+    v
+[OT Network]
+
+[B] Vendor / Engineering Workstation (Temporary Access)
+
+[Engineer] -> [ZTNA/Access Broker] -> [Jump Host]
+    |
+    | 1) Identity + device posture checks (time‑bound; MFA; EDR present)
+    | 2) Session scoped to specific Zone/Conduit(s)
+    v
+[PEPs]
+    | 3) Enforce just‑enough access (protocol/port/asset allow‑list)
+    | 4) Record session; auto‑revoke on window expiry
+
+Post‑admission continuous validation:
+- eyeInspect anomaly or new KEV/Vedere Labs → tighten/close Conduit(s) until triage
+
+------------------------------------------------------------
+Notes
+- Decisions are made by Forescout; **enforcement occurs on PEPs** (switch/WLC/firewall/SDN).
+- OT stays **passive first** to protect availability; admission is by Zone & Conduit (default‑deny).
+- Threat intelligence (Vedere Labs) and **CISA KEV** accelerate prioritization and policy changes.

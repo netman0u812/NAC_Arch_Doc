@@ -1,0 +1,96 @@
+
+ASCII FLOWS: Continuous Validation (Post‑Admission Drift/Threat)
+
+Legend
+- PDP: Policy Decision Point (Forescout platform)
+- PEP: Policy Enforcement Point (switch/WLC/firewall/SDN)
+- CoA: RADIUS Change of Authorization
+- TI: Threat Intelligence (Vedere Labs, CISA KEV, vendor advisories)
+- DPL: Forescout Device Profile Library
+
+------------------------------------------------------------
+Flow D — IoT Continuous Validation (Posture & Threat Drift)
+
+[Signals]
+  - Device drift (agent health: EDR/MDM/Vuln agent offline; heartbeat loss)
+  - DHCP/IP change anomalies; rogue services detected
+  - TI updates: KEV flag for device model/firmware; Vedere Labs indicators
+        |
+        v
+[Forescout PDP]
+  - Re-evaluate device record (DPL classification, last policy state, risk)
+  - Decide: {no change | restrict role | quarantine | isolate}
+        |
+        +--> [Access Switch/PEP]: CoA -> change dACL/VLAN/SGT to restricted
+        +--> [WLC/PEP]: CoA -> downgrade WLAN role/VLAN (wireless IoT)
+        +--> [Firewall/SDN]*: tag-based policy tighten (optional)
+        +--> [Notify/Ticket]: create case; optional user/ops alert
+
+Auto-restore: when signals recover (agent healthy; KEV mitigated), PDP issues CoA to revert to least-privilege role. All state changes logged.
+
+------------------------------------------------------------
+Flow E — OT Continuous Validation (Anomaly & Threat‑Intel Driven)
+
+[Signals]
+  - eyeInspect passive detections: new peer, unexpected protocol/function codes,
+    rate/volume anomaly, write to controller where read-only expected
+  - TI updates: Vedere Labs indicator; KEV on PLC/HMI firmware family
+        |
+        v
+[Forescout PDP]
+  - Map affected asset(s) to IEC‑62443 Zone and Conduits
+  - Decide zone-level action: {monitor only | tighten conduit | quarantine cell}
+        |
+        +--> [OT Firewall/PEP]: update allow-list (conduit) or block new peers
+        +--> [Switch/PEP]: move to OT observation VLAN (if used)
+        +--> [Access Broker]: deny vendor sessions to affected zone(s)
+        +--> [Ops Runbook]: notify control room / MOC process, capture evidence
+
+Exit: After triage/remediation, rollback conduit changes; keep audit trail and lessons learned.
+
+------------------------------------------------------------
+Flow F — Engineering / Vendor Workstation Continuous Validation
+
+[Access Broker]
+  - Enforces time-bound access; pre-checks device posture (MFA, EDR, patch age)
+        |
+        v
+[Active Session]
+  - Streaming posture events: EDR tamper on, sensor offline, policy drift
+        |
+        v
+[Forescout PDP]
+  - Action: revoke session via Access Broker; PEPs deny flows to target zone
+  - Optional: place workstation in remediation role on campus/WLAN via CoA
+  - Notify vendor and site owner; require re-attestation before re-entry
+
+------------------------------------------------------------
+Flow G — Global TI/KEV Hot‑Patch Pipeline (Fleet Response)
+
+[TI Feeds] → (Vedere Labs, CISA KEV)
+        |
+        v
+[Forescout PDP / Inventory]
+  - Correlate impacted device types/firmware across IoT/OT inventory
+  - Rank by criticality and exposure; propose actions per site
+        |
+        +--> [Change Window]: generate staged policies (monitor → enforce)
+        +--> [PEPs]: apply conduit tighten/role downgrade across targets
+        +--> [Ops]: coordinate vendor patch/compensating controls
+
+------------------------------------------------------------
+Flow H — Incident Closure & Auto‑Restore
+
+[Criteria Met]
+  - Patch applied; configuration validated; anomalies cleared; posture healthy
+        |
+        v
+[Forescout PDP]
+  - Issue CoA / policy rollback to least‑privilege; close ticket with evidence
+  - Update knowledge base (policy patterns, exceptions, maintenance notes)
+
+Notes
+- Enforcement is always executed on PEPs (switch/WLC/firewall/SDN); Forescout
+  orchestrates decisions and maintains auditability.
+- OT remains passive-first; changes prefer conduit adjustments over shutdowns.
+- All flows support staged rollout: Monitor → Alert → Enforce with rollback.

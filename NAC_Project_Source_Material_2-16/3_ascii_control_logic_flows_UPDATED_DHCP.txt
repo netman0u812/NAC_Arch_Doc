@@ -1,0 +1,63 @@
+
+ASCII Control Logic Flows (Updated with DHCP ingestion)
+
+Flow 1: Wired Admission via Cisco Catalyst (MAB) with DHCP Correlation
+
+[Endpoint] --link up--> [Catalyst Switch]
+    |  (no supplicant)
+    v
+[Catalyst: MAB] --RADIUS Access-Request (MAC)--> [Forescout]
+    |                                  (device lookup + posture from SecureConnector + CrowdStrike + Tanium + Qualys + MDM)
+    |                                  (+ DHCP fingerprints + syslog lease events + switch DHCP snooping bindings)
+    |                                  [all-required?]
+    |--No--> RADIUS Access-Accept with remediation dACL/VLAN ---> [Catalyst]
+    |        (permit DNS/DHCP/NTP/PKI/MDM/EDR/VM/Forescout only)
+    |
+    |--Yes--> RADIUS Access-Accept (prod dACL/VLAN/role) ---> [Catalyst]
+               (or Access-Accept minimal + immediate CoA to prod profile)
+
+Continuous checks: Any posture/threat/DHCP-driven anomaly --CoA Change--> [Catalyst] apply quarantine dACL/VLAN; auto-restore on compliance.
+
+-------------------------------------------------------------------------------
+
+Flow 2: Wireless Admission via Cisco ISE (EAP‑TLS) with DHCP Correlation
+
+[Endpoint Supplicant] --EAP‑TLS--> [WLC] --RADIUS--> [ISE]
+    |                          (authZ: default role/VLAN)
+    v
+[Forescout] <--session+context-- [ISE/WLC]
+    | (correlate SecureConnector + CrowdStrike + Tanium + Qualys + MDM
+    |  + DHCP syslog + switch DHCP snooping bindings for MAC→IP→Port accuracy)
+    | [compliant?]
+    |--No--> [Forescout] --CoA via ISE--> [WLC] => move to quarantine role/VLAN/dACL
+    |--Yes--> keep/upgrade to production role
+
+-------------------------------------------------------------------------------
+
+Flow 3: Continuous Validation & DHCP-Driven Re-Auth
+
+[Signals]
+  - SecureConnector heartbeat, posture
+  - CrowdStrike sensor health / detections
+  - Tanium compliance / last check-in
+  - Qualys critical vuln SLA
+  - Jamf/Intune compliance / enrollment
+  - **DHCP events** (new IP, renewals, unexpected churn) from syslog and switch snooping
+        |
+        v
+[Forescout Policy Engine]
+  - Evaluate minimum set present & healthy
+  - Evaluate risk (threats, vulns, drift, DHCP anomalies)
+  - Decide: {allow | restrict | quarantine | isolate}
+        |
+        +--> [Catalyst Switch]  : RADIUS CoA -> VLAN/dACL/SGT; optional SNMP set/CLI
+        +--> [WLC/ISE]          : CoA -> role/VLAN/dACL
+        +--> [Firewall/SDN]*    : tag/segment updates (optional)
+        +--> [Notify/Ticketing] : ITSM + user message/remediation portal
+
+Auto-heal path: On recovery events, Forescout re-evaluates and issues CoA to restore access.
+
+Citations:
+- DHCP fingerprinting / dhclasstest: turn4search45
+- Syslog Plugin for DHCP events: turn4search44
+- Switch integration / DHCP snooping bindings (documentation portal references): turn4search49

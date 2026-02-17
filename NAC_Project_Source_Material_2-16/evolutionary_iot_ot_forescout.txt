@@ -1,0 +1,94 @@
+
+Evolutionary Approach for Managing IoT & OT with Forescout (for Experts, Leadership, and Ops)
+
+Executive Summary
+- Objective: Establish a pragmatic, defensible, and auditable path to govern IoT and OT (CPS) assets—spanning discovery, inventory, admission policy, continuous validation, and incident response—using Forescout eyeSight/eyeInspect plus ecosystem integrations. This aligns to NIST SP 800‑82 Rev.3 for OT security and Zero Trust principles in NIST SP 800‑207 (verify explicitly, least privilege, continuous monitoring). [NIST SP 800‑82 Rev.3; NIST SP 800‑207]  
+- Philosophy: Forescout is the policy decision/orchestration plane; enforcement lives on switches/WLC/firewalls/SDN and, in OT, along zones/conduits per IEC 62443. Forescout also ingests OT‑specific telemetry and threat intel (Vedere Labs) to prioritize action. [eyeSight Admin/Datasheet; eyeInspect; IEC 62443 concepts]  
+
+Roadmap (Evolutionary Phases)
+Phase 0 – Readiness & Scope
+- Define OT/IoT System‑Under‑Consideration (SUC), stakeholders, and success metrics; identify critical processes and safety constraints (per NIST 800‑82). [NIST SP 800‑82 Rev.3]  
+- Establish governance: change control for plant networks, maintenance windows, vendor access, and emergency procedures.  
+
+Phase 1 – Visibility First (Weeks 0–6)
+- Deploy **Forescout eyeSight** for enterprise discovery and **eyeInspect** sensors in OT segments (passive first). Use SPAN/TAP and switch discovery to enumerate assets safely. [eyeSight Admin/Datasheet; eyeInspect]  
+- Enable device classification via the **Device Profile Library** and DHCP fingerprinting; correlate MAC→IP→Port via SNMP and DHCP snooping bindings. [Device Profile Library; eyeSight Admin]  
+- Integrate CMDB/SIEM for data sharing; baseline Purdue levels and communications maps; start building IEC‑62443 zones and conduits logically. [eyeSight Admin/Datasheet; IEC 62443 concepts]  
+
+Phase 2 – Inventory & Context (Weeks 4–10)
+- Build a canonical inventory: asset type, vendor, model, firmware, serials, location, process association, criticality. [eyeInspect; eyeSight Admin/Datasheet]  
+- Ingest OT/IoT risk intel: **Forescout Vedere Labs** (CVE/KEV, indicators) and align to **CISA KEV** for prioritization. [Vedere Labs; CISA KEV]  
+- Optional: integrate Tenable/Qualys/Tenable OT for vulnerability posture; let Forescout trigger conditional scans on connect or drift. [eyeExtend for Tenable; Qualys integration]  
+
+Phase 3 – Admission Policy & Continuous Validation (Weeks 8–16)
+- **Enterprise IoT (wired/wireless):** On connect, classify with DHCP/SNMP and fingerprints. Enforce with switch roles/VLAN/dACL; allow only minimal services until inventory & risk posture synced. [eyeSight Admin/Datasheet]  
+- **OT:** Keep **passive** discovery. No active scans on fragile segments. Authorize access by **zone membership** and **required conduits**; enforce via firewalls/SDN using allow‑lists. [NIST 800‑82; IEC 62443 concepts]  
+- **Continuous validation:** If Vedere Labs/KEV flags an asset type or new CVE, or eyeInspect sees anomalous protocol behavior, Forescout triggers CoA/segmentation change to quarantine or limit conduits. [eyeInspect; Vedere Labs; CISA KEV]  
+
+Phase 4 – Threat‑Informed Segmentation & Response (Weeks 12–24)
+- Convert logical zones/conduits to enforced policies (OT firewalls/routers/SDN). Start with site DMZ, historians, engineering workstations, then critical cells. [IEC 62443 concepts]  
+- Map detections to **MITRE ATT&CK for ICS** to drive playbooks (e.g., inhibit response function, impair process control). [MITRE ATT&CK for ICS]  
+- Integrate secure remote access for vendors (e.g., brokered ZTNA) with session recording and time‑bound access; couple to Forescout risk signals. [Xona+Forescout brief]  
+
+Phase 5 – Sustain & Assure (Ongoing)
+- Quarterly governance: review adds/moves/changes; validate backups of PLC logic; drill incident runbooks; audit conduits; update DPL and signatures. [NIST 800‑82 Rev.3]  
+- Metrics: MTTD/MTTR in OT, % covered assets, % assets in defined zones, # of conduits with enforced allow‑lists, KEV remediation SLA, exception register.
+
+
+Discovery & Inventory (Technical)
+- Data sources: switch SNMP (MAC/IP/port/VLAN), DHCP fingerprints/events, ARP, NetFlow/IPFIX where safe, passive protocol parsers (Modbus, DNP3, S7, BACnet), and OT sensors for deep protocol visibility. [eyeSight Admin/Datasheet; eyeInspect]  
+- Classification: leverage **Forescout Device Profile Library** for IoT/OT types; enrich with vendor fingerprints; avoid active scans in OT. [Device Profile Library]  
+- Inventory schema: device → zone, conduit memberships, protocol list, firmware, known CVEs (Vedere Labs), KEV flag, criticality, safety relevance. [Vedere Labs; CISA KEV]  
+
+
+Admission Policy (IoT & OT)
+IoT (Enterprise networks)
+- Wired: MAB + classification. Pre‑admit profile (dACL/VLAN) allows DHCP/DNS/NTP/asset portals only. After identification and policy checks, grant least privilege VLAN/role; log to SIEM. [eyeSight Admin/Datasheet]  
+- Wireless: 802.1X/EAP where feasible for enterprise‑grade IoT; fallback to profiling + MAC auth on WLC; apply device‑type role.  
+- Continuous validation: device state or threat intel drift → RADIUS CoA to restrict or isolate. [eyeSight Admin]  
+
+OT (Industrial networks)
+- No active interrogation by default. Admission is **by zone** and **pre‑approved conduits**; default‑deny between zones. [NIST 800‑82; IEC 62443]  
+- Engineering workstations and vendor laptops use brokered access; device health gates (EDR present, patched) enforced before session is allowed into OT conduits. [IEC 62443 concepts]  
+
+
+External Threat & Vulnerability Intelligence
+- **Forescout Vedere Labs**: daily machine‑consumable indicators (IPs, URLs, hashes), device‑centric CVEs, and **Known Exploited Vulnerabilities** tie‑ins across IT/IoT/OT/IoMT; available as an API and integrated into product risk scoring. [Vedere Labs site; Microsoft Learn plugin page]  
+- **CISA KEV**: authoritative catalog of exploited CVEs; use to elevate priority on affected IoT/OT vendors/firmware and automate policy reactions. [CISA KEV; NVD note]  
+- Map detections to **MITRE ATT&CK for ICS** to standardize analytics and response. [MITRE ATT&CK for ICS]  
+
+
+Operational Policies & Governance
+Policy themes
+1) **Zone & Conduit Standard** (IEC 62443): Define target SL‑T per zone; approve conduits with allow‑listed protocols/ports (e.g., Modbus function codes as applicable). [IEC 62443 concepts]  
+2) **Change Management**: Any asset add/move/change requires zone assignment and conduit review; eyeSight/eyeInspect used to verify communications after change. [eyeSight Admin; eyeInspect]  
+3) **Remote Access**: All third‑party access brokered, recorded, time‑bound; device posture required; least‑privilege to specific conduits only. [Xona+Forescout brief]  
+4) **Exception Handling**: Document non‑conformant legacy devices; compensating controls (data diodes, one‑way gateways, increased monitoring). [NIST 800‑82]  
+5) **Vuln & KEV Response**: For KEV‑impacted firmware/device types, trigger segmentation, emergency maintenance window, or virtual patching at conduits. [CISA KEV]  
+6) **Threat‑Driven Actions**: Vedere Labs or SIEM correlation elevates risk score → auto‑restrict nonessential conduits until triage. [Vedere Labs]  
+
+Ops runbooks (high‑level)
+- New Device Introduction (Known): request includes model, firmware, zone, required protocols; lab validation; staged deploy; monitor in learning mode; promote to enforce. [IEC 62443]  
+- Unknown Device Discovered: classify, place in quarantine VLAN/OT observation zone; investigate with eyeInspect traffic; either on‑board via the above process or remove. [eyeInspect; eyeSight Admin]  
+- Anomaly/Threat: ATT&CK technique match → contain by conduit policy; snapshot configs; vendor coordination; post‑incident review. [MITRE ATT&CK for ICS]  
+
+
+Potential Data & IT Sources for IoT/OT Collection
+- **Network**: SNMP (switch MAC/ARP tables), DHCP (fingerprints & leases), NetFlow/IPFIX (safe zones only), SPAN/TAP packets to OT sensors. [eyeSight Admin/Datasheet; eyeInspect]  
+- **Threat/Vuln**: Forescout Vedere Labs API, CISA KEV feed, Tenable/Tenable OT or Qualys posture for non‑fragile segments. [Vedere Labs; CISA KEV; Tenable integration; Qualys integration]  
+- **Enterprise**: CMDB, ITSM (change tickets), identity stores for operator workstations, SIEM for correlation. [eyeSight Admin/Datasheet]  
+
+
+Leadership Talking Points (Risk & Value)
+- **Visibility to Action**: Move from asset unknowns to enforced zones/conduits with measurable KPIs. [eyeSight Admin/Datasheet; IEC 62443]  
+- **Threat‑Informed Prioritization**: Focus scarce OT windows on KEV‑impacted and Vedere Labs‑flagged assets (what’s exploitable now). [Vedere Labs; CISA KEV]  
+- **Safer Operations**: Passive discovery avoids downtime; policies stage in monitor then enforce; response favors segmentation over shutdown. [eyeInspect; NIST 800‑82]  
+
+Appendix – Standards & References (select)
+- NIST SP 800‑82 Rev.3: OT security guidance.  
+- NIST SP 800‑207: Zero Trust Architecture.  
+- IEC 62443: Zones & conduits; SL‑T; risk‑based segmentation.  
+- MITRE ATT&CK for ICS: technique mapping for detections/playbooks.  
+- Forescout eyeSight/eyeInspect docs & datasheets: discovery/classification/risk.  
+- Forescout Vedere Labs: threat intel & KEVs.  
+- CISA Known Exploited Vulnerabilities (KEV) catalog.  

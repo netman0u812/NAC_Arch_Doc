@@ -1,0 +1,52 @@
+Data we must collect:
+
+Real‑time asset/session context (user, OS/type, MAC/IP, switchport, LLDP/CDP, VLAN/VRF): 
+Posture at connect time: Forescout agent health, Intune/Jamf compliance, machine cert + AD join, CrowdStrike sensor health/signature age, Qualys Cloud Agent service running. 
+Optional risk overlays: MDVM via Intune security tasks and/or CrowdStrike Spotlight (scanless vuln posture). 
+
+Forescout for discovery, posture, and enforcement: 
+
+Addressing the existing challenges around IP to Location/User segment mapping (foundational requirement).
+Access switches supporting SNMP/REST to apply/remove per‑port L3 ACL/dACL (default restricted L3 → promote on pass).
+SIEM/SOAR data tagging to support correlate NAC/ISE/EDR/MDM with Zscaler/ZPA/NGFW events.
+
+Key integrations:
+
+Forescout ↔ AD Domain Account, Network Service Account and custom SNMP community support.
+Forescout ↔ Intune/Jamf Service Account, needed to MDM/device inventory verification.
+Forescout ↔ CrowdStrike Service Account, needed for sensor health, security posture score.
+
+Top challenges to manage:
+ 
+No wired 802.1X—rely on L3 ACLs with DHCP snooping/IP‑MAC binding; keep strict default restricted L3. 
+MDM policy drift & exceptions—standardize Intune/Jamf baselines; migrate Jamf Conditional Access → Device Compliance. 
+Agent fatigue—define gold‑image agent order; use Falcon sensor update policy rings and auto‑heal.
+
+
+
+IoT / OT (non‑supplicant; low asset maturity)
+Data we must collect:
+
+Agentless profiling: MAC/OUI, DHCP options, LLDP/CDP, passive protocol banners & flow patterns. 
+Physical/logical context (port, VLAN/VRF/zone/SGT) and minimal allow‑lists per device type. 
+
+Tooling / enforcement
+
+Forescout profiling libraries/Device Cloud to improve classification confidence. 
+Access infrastructure with MAB + per‑port L3 ACL/dACL (default‑deny; promote on profile confidence). 
+Cisco ISE pxGrid/ANC for fast SGT‑based containment and plant/zone segmentation. 
+SIEM for OT‑aware inventory and anomaly tracking. [digisoc.net]
+
+Top challenges to manage
+
+No system of record—NAC becomes de‑facto inventory; implement discovery → owner attestation → allow‑list workflow. 
+Fragile/proprietary protocols—prefer passive discovery; schedule changes in vendor windows; maintain audited break‑glass roles. 
+Spoofing/shared ports—enforce port security, DHCP snooping, IP‑MAC binding; anchor SGTs to ports where possible. 
+Signature drift/new device models—keep profiling libraries current; leverage Device Cloud feeds. 
+
+
+Business Value
+
+Compliant‑only access at connect time (wired & WLAN), with adaptive downgrades on posture drift. 
+End‑to‑end visibility: contextual inventory + correlated telemetry (NAC/ISE/EDR/MDM ↔ Zscaler/ZPA/NGFW).
+Faster TTD/TTM: operational shift from reactive to proactive with automated containment and prioritized remediation.
