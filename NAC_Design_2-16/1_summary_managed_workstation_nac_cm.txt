@@ -1,0 +1,32 @@
+
+Managed Workstation NAC with Continuous Monitoring (Summary)
+
+Scope
+- Wired (Cisco Catalyst): No 802.1X. Enforce with MAC Authentication Bypass (MAB) and/or SNMP/API on switches; Forescout as the policy decision point (PDP). Enforcement lives on the switches (VLAN, dACL/SGT, port control).  
+- Wireless (Cisco): 802.1X EAP‑TLS with machine certificates via Cisco ISE. Forescout consumes session posture/context and can request changes through RADIUS CoA / APIs.  
+- Managed Workstation Baseline (minimum to obtain/retain production access): Forescout SecureConnector + CrowdStrike + Tanium + Qualys; device must be under management (Jamf for macOS, Microsoft MDM/Intune for Windows).  
+
+Value Proposition
+1) Zero Trust alignment: verify explicitly (identity + device posture) at admission and continuously after. Least‑privilege via dynamic VLAN/dACL/role on the switch/WLC. Assume breach—automated isolation on drift or threat.  
+2) Operational scale: agent + API signals (CrowdStrike, Tanium, Qualys, Jamf, Intune) converge in Forescout to orchestrate the network, avoiding per‑tool silos.  
+3) Risk reduction without wired 802.1X: MAB is inherently weaker than cert‑based auth, but posture + continuous validation + switch‑enforced controls + threat‑driven quarantines materially raise the bar while enabling phased migration.  
+4) Rapid containment: threat or hygiene failures immediately trigger CoA to a quarantine VLAN/dACL or WLC role; production access is restored automatically post‑remediation.  
+
+Initial Admission Policy (Wired)
+- Pre‑admit state: MAB authenticates the MAC to a restricted posture VLAN or pre‑connect dACL on the switch.  
+- Forescout validates minimum set: SecureConnector present + CrowdStrike healthy + Tanium online + Qualys agent present + MDM enrollment (Jamf or Intune).  
+- Pass → CoA: assign production VLAN/role/dACL.  
+- Fail → remain in remediation VLAN/ACL with limited reach (PKI/MDM/patching portals, Forescout, DNS, time).  
+
+Initial Admission Policy (Wireless)
+- ISE authenticates via EAP‑TLS (machine cert).  
+- Forescout correlates device signals and, if posture fails, requests change of authorization (CoA) via ISE/WLC to move the session to quarantine role/VLAN/dACL until compliant.  
+
+Continuous Validation (All)
+- Event‑driven: Any posture/threat signal change (e.g., CrowdStrike tamper‑off, Tanium offline, Qualys critical vuln, Jamf/Intune unenroll) triggers re‑eval; Forescout issues CoA to restrict or isolate; automatic restore on recovery.  
+- Time‑based: periodic rechecks; session reauth timers; drift detection; sustained non‑compliance → ticket + isolation.  
+
+Key Risks & Mitigations (Wired MAB)
+- MAC spoofing risk → mitigate with switch controls (port‑security, DHCP snooping, IP Source Guard, DAI), per‑port single‑host/multi‑auth tuning, and tight remediation ACLs.  
+- Visibility gaps → mandatory SecureConnector + integration health checks + passive profiling.  
+- Operational drift → standardized templates for VLAN/dACL/role, CoA tested on each platform, and continuous monitoring dashboards.

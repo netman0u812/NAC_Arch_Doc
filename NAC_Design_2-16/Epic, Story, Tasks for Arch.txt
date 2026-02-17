@@ -1,0 +1,256 @@
+📘 EPIC 1 — SSH‑Based Network Discovery Foundation
+
+Establish the reliable data‑collection foundation required for profiling, classification, and NAC decisioning.
+User Stories
+Story 1.1 — As a NAC engineer, I need a read‑only SSH collector to gather ARP/MAC/VLAN data
+
+So that I can classify devices and generate ground‑truth inventory.
+
+Tasks
+
+    Develop Bash collector using cli_collect.sh
+    Validate command set (show_cmds.txt)
+    Build Python collector (nac_cli_collect.py) with TextFSM
+    Implement read‑only SSH credential policies
+    Validate performance and rate limiting
+    Store outputs in standardized folder structure (cli_out/<device>)
+
+Story 1.2 — As a network engineer, I need normalized CSVs for ARP/MAC/VLAN/Neighbors
+
+So downstream systems consume the data consistently.
+
+Tasks
+
+    Normalize VLAN tables
+    Normalize MAC tables
+    Normalize ARP tables
+    Parse LLDP/CDP neighbors when available
+    Generate raw.json snapshot files
+    Generate _summary.json for execution status
+
+Story 1.3 — As a security architect, I need the collectors to run safely in production
+
+So discovery has zero operational impact.
+
+Tasks
+
+    Implement read‑only role & authorization
+    Set SSH session timeouts
+    Add command‑whitelisting
+    Add throttling (max concurrent sessions)
+    Document required network access
+
+📘 EPIC 2 — Device‑Type Classification & Enrichment Engine
+User Stories
+Story 2.1 — As a NAC system, I need device classification based on multiple identity signals
+
+So the NAC decision engine can assign proper VLAN/dACL.
+
+Tasks
+
+    Integrate OUI vendor database
+    Parse LLDP/CDP platform strings
+    Detect voice‑VLAN membership
+    Apply historical VLAN weighting
+    Produce device_type output (ip_phone, printer, OT, etc.)
+    Generate confidence scoring (High/Medium/Low)
+
+Story 2.2 — As a NAC admin, I want enriched CSVs that map every IP/MAC to a device type
+
+So enforcement decisions can be automated.
+
+Tasks
+
+    Produce arp_device_types.csv
+    Add reasons field (vendor→printer, voice_vlan, etc.)
+    Validate accuracy against real switch data
+    Publish regular enrichment jobs (cron/systemd)
+
+Story 2.3 — As an engineer, I need the enrichment engine packaged for reuse
+
+So ITSM, SIEM, and NAC systems can consume the outputs.
+
+Tasks
+
+    Produce README and operator documentation
+    Provide command‑line usage examples
+    Package scripts into ZIP for distribution
+    Version the classification logic
+
+📘 EPIC 3 — NAC Policy Framework (MAB‑Only)
+User Stories
+Story 3.1 — As Security, I need posture‑based decisions for managed endpoints
+
+So compliant devices get production access.
+
+Tasks
+
+    Integrate MDM (Intune/Jamf/WS1)
+    Integrate CrowdStrike, Tanium, Qualys connectors
+    Define compliant vs non‑compliant rules
+    Implement remediation VLAN/dACL
+    Define CoA (Change of Authorization) behavior
+
+Story 3.2 — As Security, I need IoT/OT profiles based on device type
+
+So non‑managed devices receive least‑privilege access.
+
+Tasks
+
+    Map device types → VLANs + ACL roles
+    Create IoT/OT VLAN & ACL catalog
+    Implement restricted dACLs (camera, printer, AP, OT)
+    Validate OT owner functional requirements
+
+Story 3.3 — As Security, I need a clear Unknown Device policy
+
+So unclassified devices do not gain unrestricted access.
+
+Tasks
+
+    Define unknown → Quarantine VLAN
+    Create registration workflow (ticketing)
+    Implement alerts for rogue/unknown spikes
+
+📘 EPIC 4 — Enforcement Pipeline (RADIUS + dACL + CoA)
+User Stories
+Story 4.1 — As a network engineer, I need RADIUS enforcement working end‑to‑end
+
+So MAB events are authenticated and authorized.
+
+Tasks
+
+    Configure switch AAA/RADIUS settings
+    Validate MAB request formatting
+    Configure dACLs in Forescout
+    Ensure RADIUS response attributes match vendor syntax
+    Validate CoA behavior on posture changes
+
+Story 4.2 — As Security, I need reusable ACL templates
+
+So segmentation is consistent across sites.
+
+Tasks
+
+    Create ACL templates per device type
+    Standardize naming conventions
+    Maintain ACL library in repo
+    Build ACL test harness against lab switches
+
+📘 EPIC 5 — Staging → Pilot → Production Rollout
+User Stories
+Story 5.1 — As a program lead, I need a phased enforcement model
+
+So the rollout is safe with low user impact.
+
+Tasks
+
+    Phase 0: Monitor‑only
+    Phase 1: Managed endpoint enforcement
+    Phase 2: IoT/OT enforcement
+    Phase 3: Unknown quarantine
+    Define entry/exit criteria for each phase
+    Establish rollback procedures
+
+Story 5.2 — As Ops, I need validation dashboards
+
+So we can observe classification accuracy and NAC decisions.
+
+Tasks
+
+    Build classification accuracy dashboard
+    Build unknown-device heatmap
+    Add enforcement outcome metrics
+    Integrate with SIEM for alerting
+
+Story 5.3 — As a site lead, I need site‑by‑site rollout workflows
+
+So each location is onboarded consistently.
+
+Tasks
+
+    Identify switch inventory per site
+    Run SSH collectors before rollout
+    Validate IoT/OT device list with local teams
+    Schedule enforcement windows
+    Perform post‑activation audit
+
+📘 EPIC 6 — Governance, Ownership, and ITSM Integration
+User Stories
+Story 6.1 — As Security Governance, I need a RACI model
+
+So responsibilities and decision rights are unambiguous.
+
+Tasks
+
+    Finalize RACI (Security, NetSec Eng, Network Ops, Endpoint Eng, OT Owners, GRC)
+    Publish governance charter
+    Integrate with CAB/Change Management
+
+Story 6.2 — As ITSM, I need auto‑ticket creation for NAC events
+
+So incidents are routed to the right teams.
+
+Tasks
+
+    Create ticket categories (posture fail, unknown device, IoT drift)
+    Integrate Forescout → ServiceNow API
+    Prepopulate enrichment context in tickets
+    Implement ticket assignment logic
+
+Story 6.3 — As GRC, I need compliance alignment
+
+So NAC controls support enterprise security standards.
+
+Tasks
+
+    Map policy to S‑NET/S‑IACW/S‑MON standards
+    Document compensating controls during MAB phase
+    Build periodic audit reports
+
+📘 EPIC 7 — IPAM, CMDB, and SIEM Enrichment
+User Stories
+Story 7.1 — As IPAM/CMDB owners, we need accurate device inventories
+
+So asset records match what’s actually on the network.
+
+Tasks
+
+    Build ETL from collectors → IPAM
+    Add classification attributes to CMDB CI types
+    Auto‑tag new MACs with device_type and confidence
+    Weekly variance reporting
+
+Story 7.2 — As SIEM, I need enriched metadata for NAC events
+
+So alerts are meaningful and can drive SOAR playbooks.
+
+Tasks
+
+    Forward enriched classification CSV into SIEM
+    Correlate NAC decisions with device_type
+    Implement SOAR playbooks for rogue/camera drift
+
+📘 EPIC 8 — Documentation, Training, and Operationalization
+User Stories
+Story 8.1 — As support teams, we need runbooks
+
+So incidents are handled consistently.
+
+Tasks
+
+    Port troubleshooting checklist
+    Unknown device response workflow
+    IoT/OT owner communication template
+    CoA troubleshooting guide
+
+Story 8.2 — As architects, we need complete documentation
+
+So the solution can be operated long‑term.
+
+Tasks
+
+    Architecture document
+    README & quickstart
+    Enforcement policy definitions
+    Data dictionary for enrichment fields

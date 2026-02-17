@@ -1,0 +1,205 @@
+
+Managed Workstation NAC Architecture (Wired MAB with Forescout RADIUS, ISE TACACS+, ISE 802.1X for WLAN)
+
+Author: Architecture & Operations (expert audience)
+Status: Draft v1.0 (2026‑02‑16)
+
+---
+1) Scope & Objectives
+
+This document defines the managed workstation NAC architecture with the following design goals:
+• Wired access uses MAC Authentication Bypass (MAB) with Forescout appliances functioning as the RADIUS servers and PDP for per‑session authorization and CoA. citeturn12search131turn2search25turn2search21
+• Device administration remains on Cisco ISE using TACACS+ (coexisting AAA planes). citeturn12search137
+• Wireless access remains on ISE with 802.1X/EAP‑TLS; access to the broader network is enforced at the location core via L3 ACL (or virtual firewall on the Cisco L3 device). citeturn2search29turn12search144
+• No isolation VLAN: isolation is achieved through L2 protections (DHCP Snooping, IP Source Guard, Dynamic ARP Inspection) and L3 filters/ACL with minimum viable remediation access only. citeturn2search25
+• Platforms: Cisco Catalyst 9000/9300/7000/3850/3000 at access and L3 core (IOS‑XE as deployed). (Platform list provided by customer.)
+• RADIUS accounting is enabled for auditing and correlation. citeturn12search144
+• Current NAC focus: admission and maintaining **minimum viable state** (not least‑privilege micro‑segmentation yet; that is an explicit later goal).
+
+---
+2) Control‑Plane Split (Coexistence Model)
+
+2.1 Device Administration (TACACS+)
+• Cisco ISE remains the TACACS+ authority for SSH/console/web device administration. IOS devices can simultaneously use TACACS+ for device admin and RADIUS for network access, via separate AAA method lists. citeturn12search137turn12search142
+
+2.2 Wired Network Access (RADIUS → Forescout)
+• Access switches are RADIUS clients of Forescout. Each MAB event triggers a per‑session Access‑Request; Forescout returns authorization (VLAN/role/dACL) and can issue CoA on posture/threat changes. This is the deterministic admission path; SNMP is retained for inventory/guardrails only. citeturn2search25turn2search21turn12search131
+
+2.3 Wireless Network Access (RADIUS → ISE)
+• WLAN remains 802.1X/EAP‑TLS to ISE. Enforcement to the broader routed network is performed at the Cisco L3 device via L3 ACL/virtual firewall. citeturn2search29turn12search144
+
+---
+3) Policy — Minimum Viable State (MVS)
+
+3.1 Managed Workstation Requirements (Windows/macOS)
+• Must have: Forescout SecureConnector agent, CrowdStrike sensor healthy, Tanium client online, Qualys agent installed/reporting, and device inventory/enrollment in Intune (Windows) or Jamf (macOS). citeturn2search9turn2search10turn7search12turn7search68
+• Admission decisions (Allow/Restrict/Quarantine) are returned to the switch via RADIUS; enforcement is applied on the switch (VLAN/dACL/role). citeturn2search25
+
+3.2 Minimum Remediation Access (no isolation VLAN)
+• When non‑compliant, endpoints are constrained with L2+L3 controls to a minimal allow‑list: DHCP, DNS, NTP, PKI/CRL/OCSP, Forescout appliances, EDR (CrowdStrike) cloud, MDM (Intune/Jamf) endpoints, VM platforms (Qualys/Tenable), and corporate patch repositories. This pattern is aligned to Cisco MAB design guidance (dynamic dACL/VLAN + remediation access). citeturn2search25
+
+---
+4) Wired Flow (MAB → Forescout RADIUS)
+
+1. Link‑up on access port; no 802.1X supplicant → MAB is triggered; switch learns MAC. citeturn2search25
+2. Switch sends RADIUS Access‑Request (Identity=MAC) to Forescout; Forescout correlates device profile and integration posture; returns Access‑Accept with VLAN/role/dACL. citeturn12search131turn2search25
+3. Forescout issues CoA on posture change (agent offline, unenrolled, etc.) to move the session between MVS and production roles. citeturn2search21
+4. RADIUS accounting start/stop/interim is sent to the accounting collector for auditing. citeturn12search144
+
+L2 protections on access ports (recommended defaults): enable DHCP Snooping, IP Source Guard, and Dynamic ARP Inspection in the access VLANs to mitigate MAC/IP spoofing risks in MAB environments. citeturn2search25
+
+Host mode: **multi‑auth** is permitted to support dock/hub scenarios where multiple MACs may appear behind a single port. citeturn2search25
+
+---
+5) Wireless Flow (802.1X/EAP‑TLS → ISE; L3 enforcement at core)
+
+1. Client authenticates to ISE via EAP‑TLS; WLC applies a WLAN role. citeturn2search29
+2. Access to the broader network is controlled at the Cisco L3 device using L3 ACL/virtual firewall that encodes role‑based or subnet‑based rules for permitted destinations. citeturn12search144
+
+---
+6) Operations — Validation & Observability
+
+• Verify RADIUS/CoA path on each switch family (9000/9300/7000/3850/3000):
+  – Accounting seen at collector; CoA returns 200 OK; dACL applied/removed as expected; port host‑mode multi‑auth behavior is acceptable under MAC‑move conditions. citeturn12search133
+• Monitor L2 features (DHCP Snooping bindings, IPSG hits, DAI counters) for spoof attempts; alert on MAC‑move anomalies.
+• Correlate accounting, syslog, and Forescout posture events in SIEM for RCA (who moved from MVS to production and why). citeturn12search144
+
+---
+7) Additional Recommendations (adopted)
+
+• Stage policy rollouts (Monitor → Alert → Enforce) and test CoA at scale per switch model/IOS‑XE release. citeturn12search133
+• Maintain a shared “Remediation‑Services” ACL object (IPs/FQDNs) reused by access dACL and core L3 ACL to reduce drift.
+• Define break‑glass runbooks for site RADIUS outage (fallback to local method‑lists) and track with accounting gaps.
+• Defer least‑privilege segmentation; focus on admission + MVS until posture gates are fully stable (explicit customer goal).
+
+---
+Appendix A — Cisco Configuration Examples (Catalyst IOS‑XE)
+
+A.1 AAA & Server Definitions (coexistence of ISE TACACS+ and Forescout RADIUS)
+
+```cisco
+! ---------- TACACS+ for DEVICE ADMIN via ISE ----------
+aaa new-model
+!
+aaa group server tacacs+ ISE_TACACS
+ server name ise-psn-1
+ server name ise-psn-2
+!
+ip tacacs source-interface VlanX
+!
+aaa authentication login ADMIN_AUTH group tacacs+ local
+aaa authorization exec ADMIN_AUTHZ group tacacs+ local
+aaa accounting exec ADMIN_ACCT start-stop group tacacs+
+!
+! ---------- RADIUS for WIRED NAC via FORESCOUT ----------
+radius server fs-radius-1
+ address ipv4 10.10.10.10 auth-port 1812 acct-port 1813
+ key 7 <redacted>
+!
+radius server fs-radius-2
+ address ipv4 10.10.11.10 auth-port 1812 acct-port 1813
+ key 7 <redacted>
+!
+aaa group server radius FS_RADIUS
+ server name fs-radius-1
+ server name fs-radius-2
+!
+! Dynamic Authorization (CoA) from Forescout
+aaa server radius dynamic-author
+ client 10.10.10.10 server-key <redacted>
+ client 10.10.11.10 server-key <redacted>
+ auth-type any
+!
+! Wired NAC method-lists
+aaa authentication dot1x default group FS_RADIUS
+! MAB is used for endpoints without supplicant
+aaa authentication mab default group FS_RADIUS
+!
+aaa authorization network NAC_AUTHZ group FS_RADIUS
+!
+aaa accounting network NAC_ACCT start-stop group FS_RADIUS
+```
+This layout follows Cisco’s validated pattern for separate AAA groups (TACACS+ vs. RADIUS) and enables RADIUS accounting. citeturn12search137turn12search144
+
+A.2 Global Edge Security (L2 hardening for MAB)
+
+```cisco
+! DHCP Snooping
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,30
+no ip dhcp snooping information option
+!
+! Dynamic ARP Inspection
+ip arp inspection vlan 10,20,30
+!
+! IP Source Guard (per‑port)
+interface range GigabitEthernet1/0/1-48
+ ip verify source
+ spanning-tree portfast
+``` 
+Use DHCP Snooping + IP Source Guard + DAI to mitigate spoofing in MAB designs. citeturn2search25
+
+A.3 Access Port — MAB with Multi‑Auth
+
+```cisco
+interface GigabitEthernet1/0/10
+ description Managed Workstation Port
+ switchport access vlan 10
+ authentication host-mode multi-auth
+ authentication order mab dot1x
+ authentication priority mab dot1x
+ authentication port-control auto
+ mab
+ dot1x timeout tx-period 10
+ dot1x max-req 2
+ ip dhcp snooping limit rate 50
+ ip verify source
+ spanning-tree portfast
+``` 
+Multi‑auth allows more than one authenticated MAC (e.g., dock with peripherals) while still using per‑session RADIUS authorization and CoA. citeturn2search25
+
+A.4 Example RADIUS dACL and CoA Behavior
+
+Forescout returns a named dACL or inline ACL with the Access‑Accept; later posture changes trigger CoA (re‑auth or port‑bounce not required) to swap the ACL. citeturn2search21
+
+A.5 Core L3 ACL — Minimum Viable Services (no isolation VLAN)
+
+```cisco
+ip access-list extended ACL-MVS-REMEDIATION
+ remark Allow DHCP to infra
+ permit udp any eq bootpc host 10.20.0.53 eq bootps
+ permit udp any host 10.20.0.53 eq bootps
+ remark DNS/NTP/PKI
+ permit udp any host 10.20.0.54 eq domain
+ permit udp any host 10.20.0.55 eq 123
+ permit tcp any host 10.30.0.10 eq 80
+ permit tcp any host 10.30.0.10 eq 443
+ remark Forescout appliances
+ permit tcp any host 10.40.0.20 eq 6514
+ permit tcp any host 10.40.0.21 eq 6514
+ remark CrowdStrike/Intune/Jamf/Qualys (examples)
+ permit tcp any host 52.152.0.0 0.0.255.255 eq 443
+ permit tcp any host 17.253.0.0 0.0.255.255 eq 443
+ permit tcp any host 64.39.106.0 0.0.0.255 eq 443
+ remark Default deny
+ deny ip any any log
+```
+Attach ACL‑MVS‑REMEDIATION to the routed SVI/VRF that governs “restricted” segments to provide minimum viable reach for remediation; use objects/FQDNs in production. Enforcing wireless access at the L3 core aligns to Cisco patterns for RADIUS‑based authorization with device‑specific attributes. citeturn12search144
+
+---
+Appendix B — Forescout External Tie‑Ins & Service Dependencies
+
+B.1 Posture/Inventory Integrations (minimum viable state gates)
+• CrowdStrike Falcon (sensor presence/health), Tanium (client online/compliance), Qualys/Tenable VM (recent scan/severity), and Intune/Jamf (enrollment & compliance) via Forescout eyeExtend modules/APIs. citeturn2search9turn2search10turn7search65turn7search68
+• DHCP telemetry via DHCP fingerprints (DHCP Classifier), DHCP lease events via Syslog, and switch DHCP Snooping bindings via SNMP to correlate MAC↔IP↔Port. citeturn7search58
+
+B.2 Network Control Expectations
+• RADIUS attributes: VLAN or role tag, downloadable ACL (dACL), session‑timeout/Idle‑timeout as needed; dynamic CoA support on access switches (Dynamic‑Author enabled). citeturn2search21
+• SNMP RW for backup controls and inventory; not the primary per‑session authorization path. citeturn2search15
+
+B.3 Observability & ITSM/SIEM
+• Forward Forescout posture events + RADIUS accounting + switch syslog to SIEM; create ITSM tickets on transitions to/from MVS (webhook/REST). (Device accounting/RADIUS audit as per Cisco guidance.) citeturn12search144
+
+---
+Change Log
+• v1.0 (2026‑02‑16): Initial architecture with wired MAB (Forescout RADIUS), ISE TACACS+, ISE 802.1X WLAN, L3 enforcement at Cisco core, no isolation VLAN (L2+L3 filters), accounting enabled, multi‑auth, L2 hardening.

@@ -1,0 +1,12 @@
+terminal length 0
+terminal width 512
+show version | inc uptime|Version
+show ip interface brief
+show vlan brief
+show interfaces switchport
+show mac address-table dynamic
+show ip arp
+show ip route
+show ip route vrf *
+show cdp neighbors detail
+show lldp neighbors detail

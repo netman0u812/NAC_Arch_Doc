@@ -1,0 +1,197 @@
+Zero Trust–Aligned NAC Architecture
+
+1) Purpose & Scope (Executive Overview) This architecture establishes a
+Zero Trust Network Access (ZTNA) control layer that only permits trusted
+users on compliant, trusted devices to access internal and third‑party
+(3PLZ) resources. It uses Forescout for device discovery, posture
+assessment, and connect‑time enforcement across heterogeneous networks;
+Cisco ISE for wireless authentication/authorization; Intune/Jamf for
+device compliance; CrowdStrike Falcon for endpoint protection and
+telemetry; and an application‑layer mTLS pattern for tenant proxies. The
+design aligns with NIST SP 800‑207 tenets (continuous verification,
+least privilege, telemetry‑driven policy). 
+
+2) Outcomes Mapped to Slide Columns
+
+The bullets below mirror the “Forescout NAC Platform” row in your slide
+and expand each outcome into deployable controls.
+
+Devices — Posture Check; Compliant‑Only Access
+
+Continuous device discovery & classification of managed/unmanaged
+endpoints (Windows, macOS, IoT/OT) to eliminate blind spots.
+
+Connect‑time posture gates (wired & wireless):
+
+Forescout SecureConnector installed/healthy
+MDM enrollment & compliance (Intune/Jamf)
+Valid machine certificate + AD join
+CrowdStrike Falcon installed/healthy; signature age/score thresholds
+Qualys Cloud Agent installed & service running (presence/health only)
+Devices failing any gate remain L3‑restricted until remediated. 
+
+Network — Enforce Access at Connect Time
+
+Wired (no 802.1X; no holding VLAN): Forescout applies/removes per‑port
+L3 ACLs (or downloadable ACLs) via SNMP/REST to keep devices in
+restricted L3 until posture verified, then promotes to the tenant
+policy.
+
+Wireless (802.1X with Cisco ISE): ISE performs EAP
+auth; Forescout shares posture and can signal ISE via pxGrid/ANC to
+change authorization (roles/SGTs/dACLs) on posture drift.
+
+Visibility & Analytics — Device Discovery; Network Visibility
+
+Unified inventory and posture telemetry exported to SIEM; integration
+with ISE (pxGrid) provides shared context and adaptive enforcement.
+
+
+3) Policy (Managed Workstations) Scope: Windows & macOS corporate
+workstations (wired or wireless). Connect‑time Decision (Allow to Full
+Access vs. Keep Restricted L3): A device receives full network access
+only if all checks pass:
+
+Forescout SecureConnector present, healthy. [digisoc.net] MDM compliance
+(Intune or Jamf Pro). [blog.admindroid.com], [learn.jamf.com] Machine
+certificate valid (issuer/EKU/expiry) and AD domain join verified.
+[digisoc.net] CrowdStrike Falcon sensor installed/healthy; signature age
+and policy score meet threshold. [falconpy.io] Qualys Cloud Agent
+installed; service running (presence/health only—no scan freshness
+gate). [digisoc.net]
+
+Post‑admission Continuous Controls (No hold VLAN required):
+
+On posture drift (agent disabled, MDM non‑compliant, expired cert, EDR
+unhealthy), re‑apply restricted L3 via Forescout; for wireless, use
+pxGrid/ANC to downgrade authorization dynamically. [digisoc.net],
+[docs.forescout.com] Optional risk overlays (if you choose to use them):
+
+Microsoft Defender Vulnerability Management (MDVM) device‑risk &
+remediation tasks via Intune. [blog.intunepckgr.com] CrowdStrike Falcon
+Spotlight (scanless vuln posture) for prioritization and evidence, if
+licensed. [documentat...uronix.com]
+
+
+
+
+4) Policy (Profiled IoT / Non‑Supplicant, MAB‑based) Identity &
+Profiling: MAC as client ID + Forescout signatures (OUI, DHCP/LLDP
+fingerprints, protocol heuristics) to determine device type and expected
+behavior. Devices start L3‑restricted; promotion to minimal allow‑lists
+only after classification. [digisoc.net] Enforcement: Per‑port L3
+ACLs/dACLs; for WLAN IoT, use ISE MAB with profiles and SGT‑based
+policies; Forescout can apply ANC/SGT via pxGrid when classification or
+risk changes. [docs.forescout.com]
+
+5) Reference Architecture (High‑Level)
+
+Connect (Wired/WLAN):
+
+Wired: default restricted L3; Wireless: ISE 802.1X authZ pending.
+[digisoc.net], [docs.forescout.com]
+
+
+Assess: Forescout evaluates agent/MDM/cert/AD/EDR/Qualys service; ISE
+shares auth context via pxGrid. [digisoc.net], [docs.forescout.com]
+Decide & Enforce:
+
+Pass → lift L3 restrictions (wired) or return ISE role/SGT/dACL
+(wireless). Fail → remain restricted L3 with access only to
+DNS/DHCP/IdP/MDM/EDR/Qualys management endpoints. [digisoc.net]
+
+
+Operate: Continuous posture monitoring; on drift, downgrade via L3 ACLs
+(wired) or ANC/SGT (wireless). [docs.forescout.com] Observe: Export
+device & posture telemetry to SIEM; optionally incorporate
+MDVM/Spotlight insights for analytics and prioritization.
+[blog.intunepckgr.com], [documentat...uronix.com]
+
+
+6) Integrations & Data Collection Points
+
+Forescout: discovery, profiling, posture evaluation, switch/WLC control,
+pxGrid plugin (ISE). [digisoc.net], [crowdstrik....github.io] Cisco ISE:
+802.1X for WLAN; pxGrid/ANC for adaptive authorization (SGTs/dACLs).
+[docs.forescout.com] Intune (and Jamf for macOS): device compliance
+source feeding NAC decisions; Jamf ↔ Intune device‑compliance connector
+for macOS. [blog.admindroid.com], [learn.jamf.com] CrowdStrike Falcon:
+sensor health/version/signature age; optional Spotlight vulnerability
+posture (scanless). [falconpy.io], [documentat...uronix.com] Qualys
+Cloud Agent: service presence/health check only. (No scan‑freshness gate
+in NAC.) [digisoc.net] Standards alignment: Continuous verification and
+telemetry‑driven policy per NIST SP 800‑207. [securitybo...levard.com]
+
+
+7) Network Requirements (Fit for Legacy Constraints)
+
+Switch capabilities: SNMP/REST write to apply/remove per‑port L3 ACLs;
+LLDP/CDP for mapping; DHCP snooping/IP‑MAC binding recommended.
+[digisoc.net] Wireless: ISE with 802.1X; pxGrid enabled; ANC policies
+defined for quarantine/restricted roles and SGTs. [community.cisco.com]
+Restricted L3 baseline ACLs available at every access layer, permitting
+only identity, management, and remediation services (IdP, DNS/DHCP/NTP,
+MDM, EDR, Qualys agent backends, Forescout). [digisoc.net]
+
+
+8) Governance, Risk & Outcomes (Slide‑Level Summary)
+
+Devices (Outcome: Posture & Compliance) — Compliant‑only access via
+multi‑signal posture: agent, MDM, cert/AD, EDR, and Qualys service
+presence. [digisoc.net] Network (Outcome: Enforcement at Connect Time) —
+Default restricted L3; promotion only after posture verified; WLAN auth
+via ISE with pxGrid‑driven adaptive roles. [digisoc.net],
+[docs.forescout.com] Visibility & Analytics (Outcome: Inventory &
+Telemetry) — Real‑time device inventory and posture to SIEM; optional
+MDVM/Spotlight to prioritize risk. [digisoc.net],
+[blog.intunepckgr.com], [documentat...uronix.com] Standards Alignment —
+Meets ZTA tenets for continuous verification and least privilege.
+[securitybo...levard.com]
+
+
+9) Phased Implementation Plan Phase 0 – Foundations (2–4 wks)
+
+Enable Forescout discovery on target segments; validate switch control
+profiles. Integrate Intune/Jamf for compliance; connect Falcon APIs;
+install pxGrid plugin; define ANC policies in ISE. [digisoc.net],
+[learn.jamf.com], [docs.forescout.com]
+
+Phase 1 – Connect‑Time Enforcement (4–6 wks)
+
+Enforce restricted L3 by default on wired; lift upon passing posture
+gates (including Qualys service). WLAN remains under ISE; validate
+posture‑driven role changes via pxGrid. [digisoc.net],
+[docs.forescout.com]
+
+Phase 2 – Posture Drift Automation (3–5 wks)
+
+Add continuous checks; on drift, auto‑downgrade via ACL/ANC; alert +
+ticket. (Optional) Ingest MDVM or Spotlight risk to drive targeted
+remediation flows. [blog.intunepckgr.com], [documentat...uronix.com]
+
+Phase 3 – IoT / MAB Enforcement (3–6 wks)
+
+Roll out profiling signatures; build per‑type allow‑lists; bind to
+SGT/dACL policies for WLAN IoT. [digisoc.net]
+
+
+10) KPIs & Reporting (Executive)
+
+Admission pass rate by posture dimension (Agent/MDM/Cert/EDR/Qualys).
+[digisoc.net] Time‑to‑remediate posture failures (median & 95th
+percentile). [digisoc.net] Posture drift incidents auto‑contained via
+ACL/ANC (count & MTTR). [docs.forescout.com] IoT classification coverage
+(% profiled, % on allow‑list). [digisoc.net] Wireless adaptive
+authorizations triggered via pxGrid (weekly trend). [docs.forescout.com]
+
+
+11) Risk Reduction Summary
+
+Blocks unmanaged/compromised endpoints at the edge through multi‑signal
+posture (agent, MDM, cert/AD, EDR, Qualys service presence).
+[digisoc.net] Restricts lateral movement via default restricted L3 and
+adaptive downgrades on posture drift. [digisoc.net] Vendor/IoT
+containment through profiling + least‑privilege allow‑lists; WLAN
+roles/SGTs adjust dynamically via ISE. Standards‑based assurance using
+ZTA principles for continuous verification and telemetry‑driven
+decisions. 

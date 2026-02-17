@@ -1,0 +1,3 @@
+name,mgmt_ip,username,port
+acc-sw1,10.20.1.11,nac_ro,22
+acc-sw2,10.20.1.12,nac_ro,22

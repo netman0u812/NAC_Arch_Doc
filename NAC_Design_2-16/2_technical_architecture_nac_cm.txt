@@ -1,0 +1,55 @@
+
+Technical Architecture: Forescout‑Orchestrated NAC with Continuous Monitoring (NAC+CM)
+
+Actors & Roles
+- Forescout Platform (Enterprise Manager + Appliances): Device discovery, classification, policy engine (PDP), integration hub, and RADIUS/CoA where applicable.  
+- Cisco Catalyst Access Switches: Enforcement point (PEP) for wired—MAB, VLAN/dACL/SGT, SNMP set/CLI/API operations; RADIUS accounting + CoA.  
+- Cisco Wireless (WLC + ISE): Enforcement point for wireless—802.1X (EAP‑TLS machine certs), dynamic roles/VLAN/dACL; CoA.  
+- Endpoints: Managed Windows/macOS workstations with SecureConnector + CrowdStrike + Tanium + Qualys; enrolled in Intune (Windows) or Jamf (macOS).  
+- Integrations (eyeExtend / APIs): CrowdStrike Falcon, Tanium, Qualys VM, Microsoft Intune/Entra, Jamf, Cisco DNAC/ISE, firewalls (optional).  
+
+Data & Control Planes
+1) Discovery/Inventory: Switch SNMP, DHCP, traffic fingerprints, and agent telemetry feed device identity + posture into Forescout.  
+2) Admission Decision:  
+   - Wired: Catalyst initiates MAB → RADIUS to Forescout (or proxy). Forescout evaluates MAC + device record + integration posture.  
+   - Wireless: ISE authenticates with EAP‑TLS. Forescout subscribes to session/posture context and enforces via CoA through ISE/WLC.  
+3) Enforcement: Forescout never blocks traffic itself; it instructs the switch/WLC (and optionally firewalls/SDN) to apply VLAN, role, dACL/SGT, or port state. CoA rebinds authorization dynamically.  
+4) Continuous Validation: Event streams from agents/MDM/VM feed Forescout; any posture/threat change triggers re‑authorization and network changes in near‑real time.  
+
+Minimum Compliance Gate (all must be true)
+- SecureConnector installed and healthy (heartbeat, posture collection).  
+- CrowdStrike Falcon sensor installed, running, and communicating.  
+- Tanium client online with recent check‑in.  
+- Qualys agent installed and reporting (recent scan/manifest).  
+- Device enrolled and compliant in MDM: Jamf (macOS) or Intune (Windows).  
+
+Wired Flow Details (without 802.1X)
+- Catalyst port in access/multi‑auth mode with MAB + RADIUS to Forescout; pre‑connect VLAN/dACL restricts to remediation services.  
+- Forescout evaluates posture via: agent telemetry (SecureConnector) and eyeExtend integrations (CrowdStrike/Tanium/Qualys/MDM).  
+- If compliant → RADIUS CoA from Forescout to switch to assign production VLAN/role/dACL; if not → remain in remediation. Optional SNMP set can also move VLAN or apply port ACL if RADIUS is not available.  
+
+Wireless Flow Details (with ISE)
+- Supplicant uses EAP‑TLS (machine cert) to ISE; WLC authorizes into default role.  
+- Forescout correlates EDR/MDM/VM posture; if non‑compliant or high‑risk, Forescout sends CoA (via ISE) to move to quarantine role/VLAN/dACL; restore on recovery.  
+
+Event Sources for Continuous Validation
+- CrowdStrike findings (sensor unhealthy, tamper, IOC/IOA alerts)  
+- Tanium state (client offline, critical missing patch/compliance baseline)  
+- Qualys VM (critical exploitable vuln window breach)  
+- Jamf/Intune (unenroll, non‑compliant, jailbreak/root indicators, policy drift)  
+- Agent health (SecureConnector disconnected)  
+
+Control Targets
+- Catalyst Switch: VLAN move, dACL apply, SGT/role tag, port shutdown/bounce, storm‑control and port‑security adjustments.  
+- WLC/ISE: Role/VLAN/dACL change via CoA.  
+- Firewall/SDN (optional): Tag‑based quarantine or micro‑segmentation.  
+
+Reliability & Security Considerations
+- High availability: multiple Forescout appliances behind Enterprise Manager; redundant RADIUS; switch CoA sessions validated.  
+- AuthZ safety nets: default pre‑connect ACL permits only DHCP/DNS/NTP/PKI, MDM/EDR/Vuln endpoints, and Forescout/ISE.  
+- MAB spoofing mitigations: port‑security (sticky, max 1 where possible), DHCP snooping + IP Source Guard, Dynamic ARP Inspection; monitor for duplicate MAC use; tie records to switch/port and anomaly‑score moves.  
+- Change governance: template‑based profiles per site; pre‑prod validation of CoA and dACLs; integration health SLAs.  
+
+Outcome
+- Admission based on identity + posture, enforced on switches/WLC.
+- Continuous validation with automated containment and auto‑restore to minimize MTTR.

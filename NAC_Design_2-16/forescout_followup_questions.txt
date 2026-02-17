@@ -1,0 +1,8 @@
+
+Follow-Up Questions
+
+1. What switch vendors (Cisco, Aruba, Juniper, etc.) are primarily in scope for your NAC enforcement design?
+2. Are you planning 802.1X, MAB, or a hybrid phased approach?
+3. Will Forescout function as the RADIUS server, or will an external RADIUS (ISE, FreeRADIUS, Windows NPS) be used?
+4. Is the audience's focus more on Zero Trust segmentation or traditional VLAN-based NAC?
+5. Do you want diagrams in the next revision?
