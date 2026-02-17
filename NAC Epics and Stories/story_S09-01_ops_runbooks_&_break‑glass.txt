@@ -1,0 +1,41 @@
+
+User Story Title:
+Ops Runbooks & Break‑Glass
+
+User Story Desctiption:
+Publish day‑2 runbooks, break‑glass AAA method-lists, and recovery procedures.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Operations Engineering
+
+Business Outcome:
+Enable deterministic admission with minimum viable state, and build toward scalable rollout with observability and auditability.
+
+Problem Statement (Optional):
+Without this capability, endpoints may gain excessive access or fail to remediate, increasing risk and support load.
+
+Acceptance Criteria:
+• Configuration matches golden templates and passes peer review.
+• Functional tests validate success paths and error handling.
+• CoA and/or ACL enforcement behaves as designed with evidence captured.
+• Dashboards/alerts updated to include this control.
+
+Definition of Done:
+• Changes merged to repo with version tag.
+• Change ticket executed and closed without Sev1/Sev2 incidents.
+• Documentation/runbooks updated.
+
+Notes / Additional Context:
+NAC focus is admission + MVS (not least privilege yet). Multi-auth enabled where specified.
+
+Assiocated with Epic:
+E09
+
+Assiocated with Tasks:
+Docs; peer review; drills.

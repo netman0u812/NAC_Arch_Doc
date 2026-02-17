@@ -1,0 +1,57 @@
+
+Epic Title:
+Forescout Platform Enablement & RADIUS for Wired MAB
+
+Epic Description:
+Deploy and configure Forescout appliances as RADIUS servers (PDP) for wired MAB with dynamic CoA and dACL/VLAN decisions; SNMP used for discovery/guardrails only.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Security Engineering (Forescout) + Network Engineering
+
+Business Outcome:
+Deterministic per-session authorization and rapid posture-driven control changes for managed workstations.
+
+Problem Statement (Optional):
+SNMP-only controls are reactive and lack session-level determinism and CoA.
+
+Scope:
+RADIUS plugin configuration, MAC repository, CoA (dynamic-author), accounting, health checks, HA pairs, backups.
+
+Out of Scope (Optional):
+802.1X/EAP-TLS for WLAN (belongs to ISE); device-admin TACACS+ (belongs to ISE).
+
+Success Metrics / KPIs:
+RADIUS auth success rate ≥99.9% in pilot; CoA success ≥99%; accounting completeness ≥99%.
+
+Assumptions:
+IP reachability stable; time sync (NTP) across infra; certs where required.
+
+Dependencies:
+E01 complete; device credentials; network access; firewall rules opened.
+
+High‑Level Deliverables:
+RADIUS profiles; CoA whitelist; Accounting sinks; HA validation; Ops dashboard.
+
+Child User Stories:
+S02-01, S02-02, S02-03, S02-04
+
+Risks & Mitigations:
+Accounting volume sizing; Mitigation: interim-updates tuned; storage sizing; dashboards.
+
+Stakeholders / Roles (Optional):
+SecEng, NetEng, Service Desk, SIEM team
+
+Approvals Needed (Optional):
+Security Architecture
+
+Definition of Done:
+Pilot switch authenticates via Forescout; CoA works; accounting visible; HA failover tested.
+
+Notes / Additional Context:
+Multi-auth supported on access ports.

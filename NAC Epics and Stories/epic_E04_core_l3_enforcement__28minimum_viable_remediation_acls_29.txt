@@ -1,0 +1,57 @@
+
+Epic Title:
+Core L3 Enforcement (Minimum Viable Remediation ACLs)
+
+Epic Description:
+Define and implement core L3 ACLs that restrict non-compliant endpoints to minimal services for remediation, applied to the Cisco L3 device; maintain objects/FQDN sets for cloud endpoints (EDR/MDM/VM).
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Network Engineering + Security Engineering
+
+Business Outcome:
+Contain risk while allowing remediation services; no isolation VLAN required.
+
+Problem Statement (Optional):
+Overly permissive fallback leads to lateral risk; dedicated isolation VLAN not present.
+
+Scope:
+ACL-MVS definitions; service objects; attachment to routed SVIs/VRFs; logging; change windows.
+
+Out of Scope (Optional):
+Per-app microsegmentation (future phase).
+
+Success Metrics / KPIs:
+<1% ACL hit anomalies; successful remediation reachability ≥99%; zero business-impacting false blocks in pilot.
+
+Assumptions:
+Core can host ACL/FQDN objects or accepted static CIDRs for external services.
+
+Dependencies:
+E01, E02
+
+High‑Level Deliverables:
+ACL-MVS; object groups; deployment plan; rollback plan; logs to SIEM.
+
+Child User Stories:
+S04-01, S04-02, S04-03
+
+Risks & Mitigations:
+Cloud egress IP drift; Mitigation: FQDN objects/automation; monitoring.
+
+Stakeholders / Roles (Optional):
+NetEng, SecOps, Endpoint, Service Desk
+
+Approvals Needed (Optional):
+Change Advisory Board
+
+Definition of Done:
+ACL enforced on pilot VLANs; logs verified; remediation workflows succeed.
+
+Notes / Additional Context:
+Golden object set shared with access dACLs to reduce drift.

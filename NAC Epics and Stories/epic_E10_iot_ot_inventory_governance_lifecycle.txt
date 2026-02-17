@@ -1,0 +1,64 @@
+
+Epic Title:
+IoT/OT Device Inventory, Governance & Lifecycle (Adds/Moves/Changes)
+
+Epic Description:
+Establish enterprise‑grade governance, inventory, identification, validation, and lifecycle (add/move/change/retire) for IoT and OT devices, leveraging passive discovery (eyeInspect), switch telemetry (DHCP Snooping, SNMP), and structured change workflows aligned to operational safety.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Security Architecture + OT Engineering + Network Engineering
+
+Business Outcome:
+Authoritative, real‑time inventory and safe change management for IoT/OT assets; reduced mean‑time‑to‑know; lower operational risk during device changes; consistent evidence for audits.
+
+Problem Statement (Optional):
+IoT/OT governance and inventory processes are ad hoc or absent; new devices appear without validation, increasing safety and cyber risk.
+
+Scope:
+• Passive discovery & classification (eyeInspect, DHCP/DNS, SNMP) across Purdue levels.
+• Canonical inventory schema (zone, conduit, vendor, model, serial, firmware, safety criticality, process association, owner, support). 
+• Identification/validation workflow for unknown devices.
+• AMC (add/move/change) process with approvals and MOC (management of change).
+• Exception handling for legacy/fragile devices and compensating controls.
+
+Out of Scope (Optional):
+Active scanning on fragile OT segments; per‑app microsegmentation (future).
+
+Success Metrics / KPIs:
+• 98%+ device coverage in inventory by MAC/IP/zone.
+• Unknown‑to‑classified time < 24h for new device events.
+• 100% of IoT/OT changes executed via AMC workflow; zero unapproved changes in pilot.
+
+Assumptions:
+Passive visibility available (SPAN/TAP); switch DHCP Snooping enabled; stakeholders available (OT, process owners, vendors).
+
+Dependencies:
+E01 Governance; E04 Core ACL (for containment); E07 Observability.
+
+High‑Level Deliverables:
+Governance policy; canonical inventory schema; discovery runbooks; validation & AMC workflows; exception register; dashboards.
+
+Child User Stories:
+S10‑01, S10‑02, S10‑03, S10‑04, S10‑05, S10‑06, S10‑07, S10‑08, S10‑09, S10‑10
+
+Risks & Mitigations:
+• Limited OT maintenance windows → stage passive only; pre‑approve change windows.
+• Incomplete vendor data → require model/firmware as onboarding gate; conditional access until provided.
+
+Stakeholders / Roles (Optional):
+OT Engineering, Process Safety, Network Engineering, SecOps, Vendors, Change Mgmt
+
+Approvals Needed (Optional):
+OT Director, Security Architecture, Change Advisory Board
+
+Definition of Done:
+Policy approved; inventory coverage ≥98%; AMC workflow live; dashboards operational; first 3 changes executed successfully.
+
+Notes / Additional Context:
+Align to Purdue/IEC‑62443 zoning; keep OT passive‑first; use minimum viable controls for containment.

@@ -1,0 +1,57 @@
+
+Epic Title:
+NAC Program Foundations & Governance
+
+Epic Description:
+Stand up the governance, scope, standards, and success metrics for the enterprise NAC program, aligning to the architecture: Forescout RADIUS for wired MAB, ISE TACACS for device admin, ISE 802.1X for WLAN, and L3 ACL enforcement at the Cisco core.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Security Architecture (Michael) + Network Engineering
+
+Business Outcome:
+Unified NAC program with clear responsibilities, controls, and measurable outcomes; accelerates time-to-value and reduces deployment risk.
+
+Problem Statement (Optional):
+Absence of consolidated governance and repeatable standards increases rollout risk and inconsistency across sites.
+
+Scope:
+Policies, standards, change control, environments (lab/pilot/prod), naming conventions, ACL object strategy, golden configs.
+
+Out of Scope (Optional):
+Procurement, licensing, site onboarding runbook, RACI, comms plan, training plan not included.
+
+Success Metrics / KPIs:
+Signed standard (v1.0); RACI published; risk register created; change approval flow operational; 100% of sites adopt golden templates.
+
+Assumptions:
+Executive sponsorship exists; cross-team SMEs available; CAB exists.
+
+Dependencies:
+Architecture published; lab gear available; Forescout/ISE credentials and tenant access provisioned.
+
+High‑Level Deliverables:
+Program Charter; NAC Standard v1.0; Golden AAA & ACL templates; RACI; Communications & Training outline; Risk Register.
+
+Child User Stories:
+S01-01, S01-02, S01-03
+
+Risks & Mitigations:
+Schedule slippage due to dependencies; Mitigation: timeboxed workshops, pre-read templates.
+
+Stakeholders / Roles (Optional):
+CISO, NetEng, SecOps, Endpoint, Platform, Service Desk, Change Mgmt
+
+Approvals Needed (Optional):
+CISO, VP Network, VP Security Ops
+
+Definition of Done:
+Charter approved; standard signed-off; templates published in repo; kickoff conducted.
+
+Notes / Additional Context:
+NAC currently focuses on admission and maintaining minimum viable state (MVS); least privilege segmentation is later.

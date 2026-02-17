@@ -1,0 +1,57 @@
+
+Epic Title:
+Posture Integrations (Forescout, CrowdStrike, Tanium, Qualys, Intune/Jamf)
+
+Epic Description:
+Integrate posture sources and define MVS gates: SecureConnector, CrowdStrike health, Tanium online, Qualys agent reporting, Intune/Jamf enrollment & compliance for Windows/macOS.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Security Engineering (Endpoint/NAC)
+
+Business Outcome:
+Ensure only devices meeting minimum viable state gain production access; drive automated remediation.
+
+Problem Statement (Optional):
+Unverified endpoints increase risk and incident response overhead.
+
+Scope:
+eyeExtend modules, API credentials, connectors, required endpoint attributes, health queries, error handling.
+
+Out of Scope (Optional):
+Advanced threat-driven microsegmentation (future).
+
+Success Metrics / KPIs:
+False-negative posture <0.5%; posture evaluation <5s median; integration uptime ≥99.5%.
+
+Assumptions:
+Endpoint teams support agent baselines; cloud endpoints reachable.
+
+Dependencies:
+E02
+
+High‑Level Deliverables:
+Integration runbooks; policy elements; test harness; dashboards.
+
+Child User Stories:
+S05-01, S05-02, S05-03, S05-04, S05-05
+
+Risks & Mitigations:
+API rate limiting/outages; Mitigation: backoff/queueing; cached posture with TTL.
+
+Stakeholders / Roles (Optional):
+Endpoint Eng, SecOps, Platform, Identity
+
+Approvals Needed (Optional):
+Security Architecture
+
+Definition of Done:
+Gates enforced in pilot; telemetry visible; errors alarmed.
+
+Notes / Additional Context:
+Windows/macOS parity required.

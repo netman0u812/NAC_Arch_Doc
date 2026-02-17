@@ -1,0 +1,57 @@
+
+Epic Title:
+Wireless Integration & Core Enforcement
+
+Epic Description:
+Maintain ISE 802.1X/EAP‑TLS for WLAN; ensure L3 ACLs at Cisco core govern broader network access; correlate WLAN sessions in Forescout for visibility and posture-driven notifications.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Network Engineering (WLAN) + Security Engineering
+
+Business Outcome:
+Preserve mature WLAN identity while centralizing enforcement at routed edges; unified visibility.
+
+Problem Statement (Optional):
+Split-brain visibility; inconsistent role-to-network enforcement.
+
+Scope:
+WLC/ISE policies, session export to Forescout, L3 ACL mapping.
+
+Out of Scope (Optional):
+WLAN guest captive portal (not in scope).
+
+Success Metrics / KPIs:
+Correlation rate ≥98%; no change to user auth UX; L3 ACL hits align with WLAN roles.
+
+Assumptions:
+Existing ISE WLAN stable.
+
+Dependencies:
+E04
+
+High‑Level Deliverables:
+Correlation mapping; ACL alignment matrix; validation report.
+
+Child User Stories:
+S06-01, S06-02
+
+Risks & Mitigations:
+Mapping drift; Mitigation: scheduled audits.
+
+Stakeholders / Roles (Optional):
+NetEng WLAN, SecOps
+
+Approvals Needed (Optional):
+VP Network
+
+Definition of Done:
+Forescout shows WLAN sessions; ACL policy verified at core.
+
+Notes / Additional Context:
+No change to 802.1X authorities.

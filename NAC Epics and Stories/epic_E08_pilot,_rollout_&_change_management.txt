@@ -1,0 +1,57 @@
+
+Epic Title:
+Pilot, Rollout & Change Management
+
+Epic Description:
+Execute lab validation, pilot site rollout, change windows, and phased expansion with rollback safeguards and success gates.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Program Mgmt + Network/Security Engineering
+
+Business Outcome:
+Risk-controlled adoption with measurable readiness gates.
+
+Problem Statement (Optional):
+Big-bang deployment risks outages and stakeholder pushback.
+
+Scope:
+Lab → pilot → phased rollout; site readiness checklist; training & comms.
+
+Out of Scope (Optional):
+Enterprise-wide least-privilege segmentation (later phase).
+
+Success Metrics / KPIs:
+Pilot success; <0.1% user incidents; change success ≥99%.
+
+Assumptions:
+CAB cadence in place; ops on-call.
+
+Dependencies:
+E01–E07
+
+High‑Level Deliverables:
+Readiness checklist; pilot report; rollout schedule; backout plans.
+
+Child User Stories:
+S08-01, S08-02, S08-03
+
+Risks & Mitigations:
+Competing changes; Mitigation: freeze windows, comms plan.
+
+Stakeholders / Roles (Optional):
+All infra teams, Service Desk
+
+Approvals Needed (Optional):
+CAB
+
+Definition of Done:
+Pilot signed-off; 2+ sites rolled successfully; lessons captured.
+
+Notes / Additional Context:
+Document golden change templates.

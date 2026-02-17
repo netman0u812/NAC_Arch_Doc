@@ -1,0 +1,69 @@
+
+Site Readiness Checklist – NAC (Forescout RADIUS for Wired MAB; ISE TACACS; ISE 802.1X WLAN; L3 ACL at Core)
+Version: 1.0 | Owner: Security Architecture / Network Engineering
+
+SECTION A — Governance & Contacts
+[ ] Program Charter approved (E01)
+[ ] Site technical owner(s) identified: NetEng, SecOps, Endpoint, Service Desk
+[ ] Change Management contact + CAB cycle confirmed
+[ ] Emergency/break‑glass contacts documented
+
+SECTION B — Network Prerequisites (Per Site)
+B1. Device Inventory & Versions
+[ ] Access switch models & count: Catalyst 9000/9300/7000/3850/3000
+[ ] IOS‑XE versions recorded and validated against feature matrix (CoA, DHCP Snooping, IPSG, DAI, multi‑auth)
+[ ] Cisco L3 core device identified for ACL enforcement; SVI/VRF topology documented
+
+B2. AAA & Connectivity
+[ ] RADIUS (auth 1812/acct 1813) from access VLANs to Forescout RADIUS IPs permitted
+[ ] Dynamic‑Author (CoA UDP/3799) from Forescout to access switches permitted
+[ ] TACACS+ to ISE for device admin (SSH/console/web) confirmed
+[ ] Time sync (NTP) consistent across infra (Forescout/ISE/switches)
+
+B3. Telemetry & Management
+[ ] SNMP (161/162) from Forescout to switches permitted (RW scope documented)
+[ ] Syslog from switches to SIEM/collector permitted (UDP/TCP 514 or 6514)
+[ ] HTTPS/API egress to required cloud services (CrowdStrike, Intune/Jamf, Qualys/Tenable) allowed
+[ ] DHCP/Syslog export path defined (if used for lease events)
+
+B4. Edge Security
+[ ] DHCP Snooping configured (trusted uplinks defined; VLANs enabled)
+[ ] IP Source Guard enabled on access ports; bindings verified
+[ ] Dynamic ARP Inspection enabled on relevant VLANs; rate‑limits as needed
+[ ] Host‑mode set to multi‑auth on target ports (pilot subset first)
+
+SECTION C — Forescout Platform Readiness
+[ ] RADIUS plugin enabled; client definitions; shared secrets
+[ ] Dynamic‑Author (CoA) whitelist configured; test CoA success
+[ ] RADIUS accounting sinks defined (proxy/collector/SIEM)
+[ ] HA pairs validated; backup/restore tested
+[ ] Posture integrations reachable (SecureConnector, CrowdStrike, Tanium, Qualys, Intune/Jamf)
+
+SECTION D — ISE / WLAN Readiness
+[ ] ISE TACACS Device Admin service healthy
+[ ] WLAN (802.1X/EAP‑TLS) unchanged; monitoring in place
+
+SECTION E — Core L3 ACL (MVS) Readiness
+[ ] ACL‑MVS created with remediation services (DNS/DHCP/NTP/PKI/Forescout/EDR/MDM/VM/Patching)
+[ ] Object groups (FQDN/IP sets) prepared for cloud endpoints
+[ ] Pilot VLANs/SVIs selected; attachment plan and rollback documented
+
+SECTION F — Endpoint Readiness
+[ ] Managed workstation test set (Windows/macOS) with SecureConnector, CrowdStrike, Tanium, Qualys
+[ ] Enrolled in Intune (Windows) or Jamf (macOS)
+[ ] Known non‑compliant test cases prepared (agent off/tamper/un‑enrolled)
+
+SECTION G — Lab/Pilot & Rollback
+[ ] Lab validation passed (AAA split, MAB auth, CoA, ACL‑MVS, posture gates)
+[ ] Pilot change tickets approved; communication plan sent
+[ ] Backout procedure documented (disable dACL/apply permissive ACL, revert RADIUS group, local method‑list)
+
+SECTION H — Acceptance Validation (Per Site)
+[ ] MAB success rate ≥99.9% on pilot ports
+[ ] CoA success rate ≥99%
+[ ] RADIUS accounting completeness ≥99%
+[ ] No Sev1/Sev2 incidents during pilot window
+[ ] Remediation flows (MVS) succeed for all test scenarios
+
+Notes:
+• Current scope = admission + MVS. Least‑privilege segmentation is deferred.

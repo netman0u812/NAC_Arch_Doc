@@ -1,0 +1,31 @@
+
+Dependency Maps – NAC Program
+Version: 1.0
+
+EPIC‑LEVEL DEPENDENCIES (Directed)
+E01 NAC Program Foundations & Governance  →  prerequisite for E02, E03, E04, E08
+E02 Forescout RADIUS for Wired MAB       →  prerequisite for E03, E05, E07
+E03 Access AAA & Edge Hardening          →  independent rollout; depends on E01, E02
+E04 Core L3 Enforcement (MVS ACLs)       →  prerequisite for E06; depends on E01, E02
+E05 Posture Integrations                 →  depends on E02; informs E07
+E06 Wireless Integration & Core Enf.     →  depends on E04
+E07 Observability/Accounting/SIEM/ITSM   →  depends on E02, E04, E05
+E08 Pilot/Rollout/Change Mgmt            →  depends on E01–E07
+E09 Runbooks/Training/Break‑Glass        →  depends on E02–E07; supports E08
+E10 IoT/OT Device Inventory & Governance →  depends on E01; informs E04/E07 (inventory & anomaly)
+
+STORY‑LEVEL EXAMPLES (Selected)
+S02‑01 RADIUS & CoA (Lab)   →  S02‑03 Pilot Switch Integration → S08‑01 Lab Validation & Test Plan → S08‑02 Pilot → S08‑03 Expansion
+S03‑01 AAA Split (Access)    →  S03‑02 Interface Profiles → S03‑03 L2 Protections → S03‑04 MAC‑Move Monitoring
+S04‑01 Define ACL‑MVS        →  S04‑02 Attach ACL‑MVS → S04‑03 Logging & Drift Controls
+S05‑01/2/3/4/5 Posture Gates →  S07‑02 Posture Event Integration → S07‑03 ITSM Ticket Automation
+S10‑02 Passive Discovery     →  S10‑03 Canonical Inventory → S10‑05 ID & Validation Workflow → S10‑06 AMC Process
+
+CRITICAL PATH (Zero‑State to Pilot)
+E01 → (E02 + E03) → E04 → (E05) → (E07) → E08 (pilot)
+
+RISK GATES
+• CoA reliability <99% blocks E03/E08
+• ACL‑MVS mis‑hits >1% blocks E04/E06/E08
+• Posture gate false‑negative >0.5% blocks E05/E08
+

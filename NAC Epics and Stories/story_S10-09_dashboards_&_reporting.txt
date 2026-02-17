@@ -1,0 +1,39 @@
+
+User Story Title:
+Dashboards & Reporting
+
+User Story Desctiption:
+Build dashboards for inventory coverage, unknown devices, AMC throughput, and SLA adherence.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+SecOps
+
+Business Outcome:
+Authoritative IoT/OT inventory and safe device lifecycle; faster classification and lower operational risk.
+
+Problem Statement (Optional):
+Lack of structured process causes unknown devices and unmanaged changes.
+
+Acceptance Criteria:
+• Documents/templates approved and published.
+• Functional validation performed (pilot cases executed).
+• Evidence captured in ITSM/CMDB and visible in dashboards.
+
+Definition of Done:
+• Story artifacts stored in repo/ITSM/CMDB as applicable.
+• Knowledge transfer completed; owners acknowledged.
+
+Notes / Additional Context:
+Passive‑first approach; coordinate with E04 and E07 for containment and observability.
+
+Assiocated with Epic:
+E10
+
+Assiocated with Tasks:
+Dashboards; alerts; monthly report.

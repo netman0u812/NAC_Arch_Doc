@@ -1,0 +1,57 @@
+
+Epic Title:
+Access Switch AAA & Edge Hardening (MAB + Multi-Auth + L2 Protections)
+
+Epic Description:
+Implement switch-side AAA split (ISE TACACS+ vs Forescout RADIUS), per-interface MAB with host-mode multi-auth, and L2 protections (DHCP Snooping, IP Source Guard, DAI).
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Network Engineering
+
+Business Outcome:
+Reduce spoofing risk and ensure deterministic authorization at link-up across access layers.
+
+Problem Statement (Optional):
+Unhardened edges allow trivial MAC/IP spoofing; inconsistent AAA creates drift and outages.
+
+Scope:
+Catalyst 9000/9300/7000/3850/3000 families; golden templates; interface profiles; macros.
+
+Out of Scope (Optional):
+Core ACL management; WLAN AAA (handled elsewhere).
+
+Success Metrics / KPIs:
+100% of access ports compliant; MAC-move alerts < 0.1% of ports/day; zero auth-related outages in pilot.
+
+Assumptions:
+IOS-XE features licensed; access to templates repo.
+
+Dependencies:
+E01, E02
+
+High‑Level Deliverables:
+AAA server-groups; dynamic-author; interface templates; L2 feature configs; validation scripts.
+
+Child User Stories:
+S03-01, S03-02, S03-03, S03-04
+
+Risks & Mitigations:
+Legacy switches with feature limits; Mitigation: model matrix and exception path.
+
+Stakeholders / Roles (Optional):
+NetEng, SecOps
+
+Approvals Needed (Optional):
+VP Network
+
+Definition of Done:
+Templates applied; spot checks pass; L2 tables populated; MAC-move alarms operational.
+
+Notes / Additional Context:
+Include rate-limits for DHCP; portfast on edges.

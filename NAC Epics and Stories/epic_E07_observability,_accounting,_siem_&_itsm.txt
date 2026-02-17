@@ -1,0 +1,57 @@
+
+Epic Title:
+Observability, Accounting, SIEM & ITSM
+
+Epic Description:
+Enable RADIUS accounting, device/syslog forwarding, posture event export, and ITSM ticket automation for MVS ↔ production transitions.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Security Operations + SIEM/ITSM Teams
+
+Business Outcome:
+Faster detection, RCA, and response; auditable trail for compliance.
+
+Problem Statement (Optional):
+Limited forensic data and inconsistent ticketing slow resolution.
+
+Scope:
+Accounting sinks, syslog targets, dashboards/KPIs, ticket templates, runbooks.
+
+Out of Scope (Optional):
+Full SOAR automation (future).
+
+Success Metrics / KPIs:
+Mean time to detect <5m; ticket auto-create accuracy ≥98%; accounting loss <1%.
+
+Assumptions:
+SIEM and ITSM endpoints available.
+
+Dependencies:
+E02, E04, E05
+
+High‑Level Deliverables:
+Dashboards; parsers; alerts; ticket workflows.
+
+Child User Stories:
+S07-01, S07-02, S07-03
+
+Risks & Mitigations:
+Data volume; Mitigation: filters and sampling where safe.
+
+Stakeholders / Roles (Optional):
+SecOps, Service Desk
+
+Approvals Needed (Optional):
+SOC Lead
+
+Definition of Done:
+Dashboards live; alerts tuned; tickets created on transitions.
+
+Notes / Additional Context:
+Adopt Monitor→Alert→Enforce telemetry gates.

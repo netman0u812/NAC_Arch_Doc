@@ -1,0 +1,57 @@
+
+Epic Title:
+Runbooks, Training & Break‑Glass
+
+Epic Description:
+Publish day‑2 ops runbooks, training materials, and break‑glass procedures for RADIUS outage and emergency access.
+
+Creator:
+Martin, Michael J
+
+Status:
+Draft
+
+Owner:
+Operations Engineering + Service Desk
+
+Business Outcome:
+Reduced MTTR and consistent incident handling across sites.
+
+Problem Statement (Optional):
+Inconsistent operations leads to prolonged incidents.
+
+Scope:
+Runbooks, decision trees, training sessions, quick reference guides.
+
+Out of Scope (Optional):
+Formal certification program.
+
+Success Metrics / KPIs:
+Ops training completion ≥95%; runbook adherence ≥90%.
+
+Assumptions:
+Time allocated for training.
+
+Dependencies:
+E02–E07
+
+High‑Level Deliverables:
+Runbook pack; training deck; crib sheets; KEDB entries.
+
+Child User Stories:
+S09-01, S09-02
+
+Risks & Mitigations:
+Staff turnover; Mitigation: recorded sessions; LMS hosting.
+
+Stakeholders / Roles (Optional):
+Ops, Service Desk
+
+Approvals Needed (Optional):
+Ops Director
+
+Definition of Done:
+Runbooks in repo; training delivered; drills executed.
+
+Notes / Additional Context:
+Include break-glass AAA method-lists and recovery.
