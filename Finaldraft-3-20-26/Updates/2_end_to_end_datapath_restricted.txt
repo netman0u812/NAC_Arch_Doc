@@ -1,0 +1,23 @@
+End‑to‑End Data Path — Unmanaged/Non‑Compliant (Restricted Egress)
+
+    [Wireless Client (Unmanaged OR EDR Unhealthy)]
+                      |
+                  (802.11)
+                      |
+                  [Access Point]  (Transport only)
+                      |
+                  (Ethernet)
+                      |
+               [Access Switch Port]
+                      |             RADIUS MAB -------->|            \-----> [NAC / RADIUS]  (Policy decision)
+ (MAC Identity)       |                        |                        |                        |   \--> [Intune/Jamf] (managed/compliant?)
+    Apply dACL/Role/SGT (RESTRICTED EGRESS) <--/              - Allow: DNS/DHCP, ZIA bootstrap/gw, Intune/Jamf,    \--> [CrowdStrike] (sensor health?)
+              CrowdStrike, PKI/CRL/OCSP
+     - Deny: All RFC1918/internal, east-west, generic Internet
+                      |
+               L2/L3 Switching
+            +------------------+
+            |                  |
+       [Internal]          [Internet via ZIA]
+        (DENY)           (Only minimal ZIA paths allowed
+                          until remediation completes)

@@ -1,0 +1,552 @@
+Absolutely. Below is a feature → function → dependency blueprint that you can hand to network, security, and endpoint teams to implement the architecture we’ve defined. It’s written as an engineering‑ready plan with depth, clarity, and sequencing, not a terse checklist. It includes what each feature does, why it matters, the exact dependencies (infrastructure, integrations, policy artifacts, and process), validation tests, and acceptance criteria—so each team knows what to build and how to prove it works.
+
+Scope Recap (for context):
+Wireless edge where WLAN cannot enforce; access switch is the enforcement point using RADIUS MAB + CoA; Intune/Jamf are the authoritative “managed” truth; CrowdStrike provides runtime integrity; ZIA is the only internet broker; “quarantine” implemented as Restricted Egress role (not a VLAN).
+
+
+Feature–Function–Dependency Implementation Plan
+0) Global Program Assumptions
+
+Policy Authority: NAC (ForeScout or equivalent) is the decision/orchestration plane; MDM/UEM (Intune/Jamf) is authoritative for “managed”; EDR (CrowdStrike) is authoritative for runtime sensor health; ZIA enforces internet egress after bootstrap.
+Enforcement Location: Access switch, AP uplink port(s), per‑device policy via RADIUS MAB (not on AP).
+Runtime Control: RADIUS CoA for posture transitions (no VLAN churn, no link flap).
+Governance: Policy as code; versioned allow‑lists; SIEM correlation; time‑boxed exceptions.
+
+
+1) Device Discovery & Session Correlation
+1.1 Feature
+NAC device discovery & correlation across wireless clients, building MAC↔IP sessions with high fidelity even without WLAN enforcement.
+1.2 Function
+
+Observe DHCP to bind MAC↔IP for wireless clients.
+Monitor ARP to maintain bindings and detect spoofing.
+Ingest RADIUS accounting (if emitted by AP/WLC) for session metadata.
+Apply fingerprinting (DHCP options, OUI, OS hints) to categorize devices.
+
+1.3 Dependencies
+
+Switch: DHCP snooping enabled on access VLANs (foundation for binding & security).
+Switch: Dynamic ARP Inspection (DAI) supported/enabled where feasible (to detect ARP spoof).
+NAC: DHCP listener/collector configured; ARP poll/collector enabled.
+AP/WLC (optional): RADIUS accounting messages sent to NAC (if available).
+Network: SPAN/flow (optional) to enhance visibility, not required for enforcement.
+
+1.4 Validation
+
+For a sample of test endpoints, NAC shows IP/MAC binding within 3–10s of DHCP ACK.
+ARP changes reflected in NAC within polling window.
+Fingerprint accuracy ≥90% for common platforms (Windows/macOS/iOS/Android).
+
+1.5 Acceptance Criteria
+
+Deterministic session record present in NAC for any newly connected wireless device, with MAC, IP, first‑seen, last‑seen, switch/port context.
+
+
+2) RADIUS MAB Admission & Authorization
+2.1 Feature
+MAC Authentication Bypass on AP‑facing switchports, with AAA and CoA fully operational.
+2.2 Function
+
+Switch performs RADIUS Access‑Request using MAC as identity.
+NAC returns Access‑Accept with authorization attributes:
+
+dACL / role / SGT for either Standard or Restricted Egress.
+Session‑timeout (optional) for periodic reauth.
+
+
+NAC issues CoA on posture changes; switch re‑applies policy in place.
+
+2.3 Dependencies
+
+Switch OS capabilities:
+
+MAB on interfaces that are AP uplinks.
+Per‑client policy on a shared port (per‑session dACL/role).
+CoA support (RFC 5176 or vendor equivalent).
+Sufficient TCAM for ACL scale; hardware limits reviewed.
+
+
+RADIUS: NAC as AAA server; dynamic‑authorization (CoA) trust configured.
+NAC: Policy rules and RADIUS attribute sets for both roles.
+Network: IP reachability between switch and NAC RADIUS (auth & acct ports).
+Security: Shared secrets, time sync (NTP), and device inventory in NAC.
+
+2.4 Validation
+
+On connect, MAB → Access‑Accept path completes < 2s.
+CoA round‑trip for posture flip < 5–10s from state change to enforced policy.
+Per‑client enforcement verified with two hosts behind the same AP uplink receiving different roles.
+
+2.5 Acceptance Criteria
+
+Session aware: show commands on the switch display per‑client session with applied policy name.
+CoA proven: compliance flip in lab toggles roles without link flap or DHCP renewal.
+
+
+3) Authoritative “Managed” Status via Intune & Jamf
+3.1 Feature
+Live enrollment/compliance state retrieval from MDM/UEM (Intune for Windows/mobile; Jamf for macOS/iOS).
+3.2 Function
+
+NAC queries Intune/Jamf to evaluate:
+
+Enrollment present (true/false)
+Compliance (true/false)
+Last check‑in time (staleness guard)
+Ownership (Corporate vs BYOD) if used for policy routes.
+
+
+
+3.3 Dependencies
+
+API Integration:
+
+Intune/Graph: NAC app registration (client ID/secret, permissions).
+Jamf Pro: API user/role with device read privileges.
+
+
+Identity Mapping:
+
+Correlate device identity in MDM with NAC’s MAC/IP session. Options:
+
+Device certificate thumbprint (if issued via MDM enrollment).
+Hostname mapping from DHCP option 12 and MDM inventories.
+Serial/UDID ↔ Username ↔ Device record correlation (if user auth context exists).
+
+
+
+
+Timeouts:
+
+Compliance considered stale if last check‑in > X hours (policy‑defined).
+
+
+
+3.4 Validation
+
+For representative devices (Windows/macOS/iOS), NAC shows enrolled+compliant vs unenrolled vs non‑compliant correctly, matching Intune/Jamf portals.
+Compliance staleness triggers Restricted Egress within agreed SLA.
+
+3.5 Acceptance Criteria
+
+Precedence rule enforced: MDM state alone is decisive for “managed.”
+NAC policy denies standard access when enrollment/compliance are not both true.
+
+
+4) Runtime Assurance via CrowdStrike
+4.1 Feature
+EDR sensor health gate as a requirement for standard access.
+4.2 Function
+
+NAC queries CrowdStrike for:
+
+Sensor presence on device.
+Heartbeat/last seen time within threshold.
+Tamper protection (if available via API).
+Optional: Risk score / detection flag to downshift role.
+
+
+
+4.3 Dependencies
+
+API Integration: OAuth2 client in CrowdStrike with read permissions for device data.
+Identity Mapping:
+
+Prefer strong key (device ID ↔ hostname ↔ serial), fallback to MAC/IP mapping via EDR inventory.
+
+
+Policy:
+
+If MDM is “managed & compliant” but EDR not healthy, device remains in Restricted Egress.
+
+
+
+4.4 Validation
+
+Sensor uninstall or service stop triggers Restricted Egress within SLA.
+Sensor repair (update/reinstall) triggers CoA back to standard access.
+
+4.5 Acceptance Criteria
+
+Two‑signal requirement in policy: Standard access only when MDM = managed AND EDR = healthy.
+
+
+5) ZIA‑Centered Restricted Egress
+5.1 Feature
+Restricted Egress role allowing only ZIA, Intune/Jamf, CrowdStrike, and essentials (DNS/DHCP/PKI) from the access switch.
+5.2 Function
+
+Enforce a minimal allow‑list via dACL/role/SGT:
+
+DNS (53/UDP), DHCP (67/68 UDP).
+ZIA bootstrap & gateway ranges (or FQDN objects if supported).
+Intune (enrollment, MDM endpoints, policy/CDN if needed), Jamf (mgmt APIs, check‑in).
+CrowdStrike cloud endpoints.
+PKI/CRL/OCSP (if certificates are checked).
+
+
+Deny all RFC1918 and east‑west; block generic internet except ZIA paths.
+
+5.3 Dependencies
+
+Policy Objects:
+
+Maintain allow‑lists as object groups (ZIA, Intune, Jamf, CrowdStrike).
+Automation to update IPs from vendor feeds/Docs; or use FQDN ACLs if platform supports.
+
+
+Switch Capability:
+
+Per‑session dACL scale (estimate max concurrent wired/wireless clients per stack).
+Logging of default‑deny hits for SIEM feedback loop.
+
+
+ZIA Client:
+
+Ensure bootstrap path is permitted in Restricted Egress so tunnel/PAC can form.
+
+
+
+5.4 Validation
+
+In Restricted Egress, device can:
+
+Resolve DNS, refresh ZIA client, talk to MDM/EDR endpoints.
+
+
+In Restricted Egress, device cannot:
+
+Reach any RFC1918/internal subnets.
+Reach internet resources except via ZIA after bootstrap.
+
+
+
+5.5 Acceptance Criteria
+
+Remediation works end‑to‑end without helpdesk intervention in the majority of cases.
+No lateral movement possible from Restricted Egress.
+
+
+6) Role/SGT Evolution (Optional, Strategic)
+6.1 Feature
+Transition from dACLs to roles and then SGT/TrustSec for scalable, identity‑based enforcement.
+6.2 Function
+
+Short term: dACLs per session.
+Midterm: map RADIUS response to named role with reusable ACL objects.
+Long term: assign SGTs; enforce at distribution/core and firewalls with SGT policy.
+
+6.3 Dependencies
+
+Hardware/software that supports SGT tagging on access edge.
+End‑to‑end SGT propagation and policy enforcement devices (e.g., core switches/firewalls).
+NAC able to send AVPairs for tag assignment.
+
+6.4 Validation
+
+Same AP uplink: client A gets SGT‑Managed, client B gets SGT‑Restricted; upstream policy acts accordingly.
+
+6.5 Acceptance Criteria
+
+Policy equivalence to dACLs is proven; operational complexity decreases (fewer ACL lines, more intent‑based).
+
+
+7) Change of Authorization (CoA) at Scale
+7.1 Feature
+CoA reliability & performance under load for posture flips.
+7.2 Function
+
+NAC triggers CoA on MDM/EDR state change.
+Switch re‑auths existing session; applies new role immediately.
+
+7.3 Dependencies
+
+Switch: RFC 5176 (or vendor) dynamic‑authorization configured; state table sizing validated.
+NAC: Backoff/retry for CoA; queueing; deduplication (no CoA storms).
+Monitoring: CoA success/latency metrics.
+
+7.4 Validation
+
+Batch flip (e.g., 100 devices) → median CoA latency < 10s; failure rate < 0.5% with retries.
+
+7.5 Acceptance Criteria
+
+SLA codified for posture‑to‑enforcement latency (e.g., P95 < 15s campus‑wide).
+
+
+8) Identity Hardening at the Edge
+8.1 Feature
+DHCP snooping + DAI + Port Security to protect MAC/IP identity.
+8.2 Function
+
+Bindings built from DHCP snooping drive DAI to drop spoofed ARPs.
+Rate‑control and anomaly alerts for MAC churn.
+
+8.3 Dependencies
+
+Switch: Support and configuration for snooping/DAI; trusted uplinks defined; option 82 preserved as needed.
+Operations: Exception catalog for devices with static IP (OT/IoT), if any.
+
+8.4 Validation
+
+Attempt MAC spoofing or ARP poisoning in a test segment triggers drops & logs; no impact to legit clients.
+
+8.5 Acceptance Criteria
+
+Spoof resistance documented and evidenced in SIEM with test runs.
+
+
+9) Integrations: Intune, Jamf, CrowdStrike, ZIA
+9.1 Feature
+Robust API integrations with timeouts, retries, and data freshness guards.
+9.2 Function
+
+Poll or event‑driven updates from MDM/EDR.
+Cache lifetimes and staleness thresholds (e.g., if Graph API lags, treat as non‑compliant after X).
+
+9.3 Dependencies
+
+Credentials lifecycle (rotation), scopes least privilege.
+Time sync (NTP) across NAC, switches, MDM, EDR.
+
+9.4 Validation
+
+Simulate API slowdowns; verify graceful degrade to Restricted Egress with clear logging.
+
+9.5 Acceptance Criteria
+
+No brittle coupling; partial outages do not fail open.
+
+
+10) Policy as Code & Object Management
+10.1 Feature
+Version‑controlled policy artifacts (roles, ACLs, object groups).
+10.2 Function
+
+Maintain YAML/JSON sources for allow‑lists (ZIA/Intune/Jamf/CrowdStrike).
+CI job compiles to switch‑compatible objects or NAC RADIUS profiles.
+Automated change tickets with diffs and staged rollout.
+
+10.3 Dependencies
+
+Repo (Git), CI runner, secrets handling, testing harness.
+NAC API or configuration import pipeline.
+
+10.4 Validation
+
+Dry‑run produces expected dACL/role deltas; lab push successful; prod staged by region.
+
+10.5 Acceptance Criteria
+
+Every production change has an audit trail, approvers, and a rollback plan.
+
+
+11) Logging, Telemetry, and SIEM Correlation
+11.1 Feature
+End‑to‑end observability of decisions and enforcement.
+11.2 Function
+
+RADIUS logs (Access‑Request/Accept/CoA) from NAC.
+Switch syslog for authorization changes and ACL denies.
+MDM/EDR state snapshots at decision time.
+ZIA logs (optional) for restricted devices’ egress behavior.
+
+11.3 Dependencies
+
+SIEM ingestion pipelines and parsers for all sources.
+Correlation IDs (e.g., MAC/IP + device name) consistent across sources.
+
+11.4 Validation
+
+Sample case shows single timeline across NAC → switch → MDM → EDR → ZIA.
+
+11.5 Acceptance Criteria
+
+Defined dashboards and alerts:
+
+Time‑to‑restrict SLA breach.
+Policy drift (NAC intent vs switch reality).
+Break‑glass usage.
+
+
+
+
+12) Exception & Break‑Glass Management
+12.1 Feature
+Time‑boxed, audited exceptions for operational continuity.
+12.2 Function
+
+Special roles with tight scope; automatic expiry.
+Approval workflow (ServiceNow/Jira).
+Enhanced logging; separate SIEM alerts.
+
+12.3 Dependencies
+
+NAC role definitions for break‑glass.
+Ticketing integration with webhook/API to NAC for apply/revoke.
+
+12.4 Validation
+
+Create/expire exception end‑to‑end; logs indicate who/when/why.
+
+12.5 Acceptance Criteria
+
+No “permanent” exceptions; age‑out is enforced; monthly review is automated.
+
+
+13) Failure Modes & Graceful Degradation
+13.1 Feature
+Predictable behavior during outages (MDM/EDR/NAC/AAA).
+13.2 Function
+
+MDM down: default Restricted Egress (fail‑safe).
+EDR down (control plane): default Restricted Egress; defined critical exceptions only.
+NAC down: existing sessions hold; new sessions default Restricted Egress; alert NOC.
+CoA path down: timer‑based session reauth as fallback.
+
+13.3 Dependencies
+
+Runbooks with RACI; NOC playbooks with decision trees.
+
+13.4 Validation
+
+Tabletop and live tests (in a pilot) for each failure mode.
+
+13.5 Acceptance Criteria
+
+No unintentional fail‑open; all cases produce evidence.
+
+
+14) Non‑User Devices (OT/IoT/BYOD)
+14.1 Feature
+Constrained roles for devices that cannot enroll in MDM.
+14.2 Function
+
+Profile by fingerprint; assign “IoT‑Restricted” role with strict L3/L4 allow‑list.
+BYOD wireless can be steered to guest path (ZIA‑only), optionally with captive portal onboarding to MDM if corporate device.
+
+14.3 Dependencies
+
+Separate SSID/VLAN or policy role for guest/BYOD if required by governance.
+NAC fingerprints and role mapping logic.
+
+14.4 Validation
+
+Cameras/printers/OT controllers receive only their necessary flows; no east‑west beyond documented needs.
+
+14.5 Acceptance Criteria
+
+Least privilege proven for every IoT class in sample tests.
+
+
+15) Deployment Sequencing & Cutover
+15.1 Feature
+Safe rollout plan with pilots, canaries, and phased expansion.
+15.2 Function
+
+Lab: build & validate features 1–5 fully with 2–3 switches and a test SSID.
+Pilot: one building/floor; enable logging, CoA stress tests, and runbooks.
+Wave rollout: per site stack → validate KPIs → expand.
+
+15.3 Dependencies
+
+Staging policy bundles; feature flags at NAC; NOC trained for CoA behaviors.
+
+15.4 Validation
+
+Pilot KPIs:
+
+P95 time‑to‑restrict < 15s;
+P95 time‑to‑remediate < 30 min (typical auto‑recovery);
+False‑restricts < 0.5%;
+Zero unexpected fail‑open.
+
+
+
+15.5 Acceptance Criteria
+
+CAB sign‑off to proceed site‑by‑site; rollback plan documented and tested.
+
+
+16) KPIs, SLAs, and Control Validation
+16.1 Feature
+Measurable guardrails to ensure the design is working.
+16.2 Function
+
+KPIs: % devices granted Standard role at connect, time‑to‑restrict, time‑to‑remediate, # devices in Restricted Egress > 24h, policy drift events, exception counts & durations.
+SLA: Posture change to enforced policy P95 < 15s; CoA success > 99% monthly.
+
+16.3 Dependencies
+
+SIEM dashboards; weekly governance review.
+
+16.4 Validation
+
+First month’s metrics baseline established; anomalies investigated with RCA.
+
+16.5 Acceptance Criteria
+
+KPIs within targets for two consecutive review cycles.
+
+
+Cross‑Cutting Data & Policy Artifacts
+
+Object Groups (as code):
+
+obj.zia.gateways: Published IP/FQDNs for ZIA bootstrap and tunnels.
+obj.intune.core: Enrollment/compliance endpoints; add CDNs as required by policy.
+obj.jamf.core: Jamf Pro API/check‑in endpoints.
+obj.crowdstrike.cloud: Sensor update & telemetry.
+obj.pki.core: CRL/OCSP if relevant.
+obj.rfc1918: 10/8, 172.16/12, 192.168/16.
+
+
+Roles/Profiles:
+
+role.standard: Standard corporate access (as dictated by segmentation).
+role.restricted_egress: Minimal allow‑list, default deny internal/east‑west.
+role.break_glass: Time‑boxed; alarmed; narrow scope.
+role.iot_restricted: Per‑class minimal allows (printers, cameras, etc.).
+
+
+Precedence/Logic (authoritative truth):
+
+managed := (intune.enrolled && intune.compliant) || (jamf.enrolled && jamf.managed)
+healthy := crowdstrike.present && crowdstrike.healthy
+standard := managed && healthy
+else → restricted_egress
+
+
+Timers/Thresholds:
+
+Intune/Jamf staleness: e.g., > 8h last check‑in → treat as non‑compliant (tune per org).
+CrowdStrike heartbeat: e.g., > 1h last seen → unhealthy (tune per org).
+CoA backoff & retry: exponential with cap; log failures.
+
+
+
+
+RACI Snapshot (Abbrev.)
+
+Network Eng.: Switch features (MAB, CoA, snooping/DAI), dACL scale, logging; rollout.
+SecArch/NAC: Policy logic, RADIUS attributes, integrations, CoA strategy, SIEM correlation.
+Endpoint (EUEM/UEM): Intune/Jamf posture quality, device cert issuance (if used), enrollment UX.
+SecOps/EDR: CrowdStrike sensor health governance, tamper protection, incident response hooks.
+Identity/Cloud: App registrations (Graph/Jamf/CS), secret rotation, permissions hygiene.
+GRC: Policy governance, exceptions oversight, periodic control testing.
+NOC: Runbooks, monitoring, break‑glass handling, first‑response.
+
+
+Cutover Readiness—Go/No‑Go Checklist (Detailed but Non‑Sparse)
+
+MAB & CoA proven on target switch families with per‑client policy on AP uplinks.
+Restricted Egress allow‑list validated (lab, canaries, pilot) with ZIA/Intune/Jamf/CrowdStrike/DNS/DHCP/PKI reachability and hard deny to RFC1918 and generic internet.
+Intune/Jamf integration produces deterministic managed/compliant truth; staleness threshold set.
+CrowdStrike integration produces reliable healthy/unhealthy signal with heartbeat SLA.
+Precedence rule enforced (MDM decisive; EDR required) with tests for each conflict case.
+CoA latency & success > target under load; queues and retries verified.
+Identity hardening (DHCP snooping/DAI) enabled with exceptions cataloged.
+Policy as code pipeline produces reproducible dACL/role artifacts; rollback validated.
+SIEM correlation dashboards and alerts live; drill prints show evidence chain end‑to‑end.
+Runbooks (failure modes, exception flow) tested in pilot; RACI acknowledged.
+KPIs/SLA instrumentation live; pilot met targets two cycles; rollback plan rehearsed.

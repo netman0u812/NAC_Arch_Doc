@@ -1,0 +1,14 @@
+Observability & Audit Trace — SIEM Correlation Topology
+
+   [NAC/RADIUS] ---- RADIUS (Auth/Acct + CoA logs) ----> [SIEM]
+        |          |   \-- API calls/decisions  ------------------> [SIEM]
+        |                    |             \-- Intune/Jamf state snapshots --> [SIEM]
+        |
+   [Access Switch] ---- Syslog (AuthZ changes, ACL denies) --> [SIEM]
+        |
+   [ZIA] (optional) ---- Egress logs for restricted clients --> [SIEM]
+        |
+   [CrowdStrike] --------- Sensor health / detections -------> [SIEM]
+
+Correlated keys: MAC, IP, hostname/serial, timestamps, role names (STANDARD/RESTRICTED),
+reason codes (MDM status, EDR health), CoA event IDs.

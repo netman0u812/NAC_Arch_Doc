@@ -1,0 +1,19 @@
+Per‑Client Enforcement on a Shared AP Uplink
+
+                         [Access Switch Port Gi1/0/24]
+                                   ||
+            +----------------------+----------------------+
+            |                                             |
+       [AP MAC]                                        (Port)
+            |                                             |
+   ---------- Wireless Clients Behind AP Uplink ----------
+            |                                             |
+     (Client A: Managed)                       (Client B: Unmanaged)
+        MAC: AA:AA:...                               MAC: BB:BB:...
+        IP : 10.20.30.40                             IP : 10.20.31.41
+        Role: STANDARD                               Role: RESTRICTED EGRESS
+            |                                             |
+    dACL/Role applies                           dACL/Role applies
+      to AA/10.20.30.40                            to BB/10.20.31.41
+            |                                             |
+      Allowed per seg                      Only ZIA/MDM/EDR/DNS/DHCP/PKI

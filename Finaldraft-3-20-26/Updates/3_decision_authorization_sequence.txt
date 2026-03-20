@@ -1,0 +1,27 @@
+Decision & Authorization Sequence (MAB + NAC + Intune/Jamf + CrowdStrike + CoA)
+
+Client         Switch/AP Port        NAC/RADIUS        Intune/Jamf       CrowdStrike
+  |                 |                   |                 |                  |
+  | Assoc to AP     |                   |                 |                  |
+  |---------------->|                   |                 |                  |
+  |                 | MAB Access-Request (MAC as identity)|                  |
+  |                 |------------------>|                 |                  |
+  |                 |                   | Query mgmt ---->|                  |
+  |                 |                   |<--- Enrollment/Compliance ---------|
+  |                 |                   |                 |                  |
+  |                 |                   | Query EDR ------------------------>|
+  |                 |                   |<--- Sensor Presence/Health --------|
+  |                 |                   |                 |                  |
+  |                 |  Access-Accept + AuthZ attrs (STANDARD or RESTRICTED) |
+  |                 |<------------------|                 |                  |
+  |                 | Apply dACL/Role/SGT               |                  |
+  |                  (per device, on shared uplink)     |                  |
+  |                 |                   |                 |                  |
+
+-- Posture Change (e.g., device falls out of compliance) -----------------------
+
+  |                 |                   |                 |                  |
+  |                 |    CoA (Change of Authorization)   |                  |
+  |                 |<------------------|                 |                  |
+  |                 | Re-authorize session; apply new role (Restricted)      |
+  |                 |                   |                 |                  |

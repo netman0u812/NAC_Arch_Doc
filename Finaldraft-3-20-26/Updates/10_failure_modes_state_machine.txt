@@ -1,0 +1,30 @@
+Failure Modes & Graceful Degrade — State Machine
+
+                 +---------------------+
+                 |  Normal Operations  |
+                 |  (All control OK)   |
+                 +----------+----------+
+                            |
+                            v
+                 +---------------------+
+   MDM outage -->|  MDM Unavailable    |-----> Default: RESTRICTED EGRESS
+                 +----------+----------+        (fail-safe, alert)
+                            |
+                            v
+                 +---------------------+
+   EDR outage -->|  EDR Unavailable    |-----> Default: RESTRICTED EGRESS
+                 +----------+----------+        (strict exceptions only)
+                            |
+                            v
+                 +---------------------+
+   NAC outage -->|  NAC Unavailable    |-----> Existing sessions keep last-known auth;
+                 +----------+----------+        New sessions default RESTRICTED
+                            |
+                            v
+                 +---------------------+
+   CoA path down |  CoA Degraded       |-----> Timer-based reauth fallback
+                 +----------+----------+
+
+All transitions log to SIEM. Runbooks define alerts, owners, and user comms.
+
+Policy: Never unintentionally fail-open.

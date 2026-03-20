@@ -1,0 +1,11 @@
+CoA Timing Detail — In‑Place Posture Flip
+
+T0:  NAC detects posture change (MDM non-compliant OR EDR unhealthy)
+T1:  NAC sends CoA to access switch (RFC 5176 / dynamic authorization)
+T2:  Switch re-authorizes the EXISTING session (no link flap)
+T3:  Switch swaps STANDARD role → RESTRICTED EGRESS role
+T4:  Flows to internal RFC1918 stop; only ZIA + MDM/EDR + DNS/DHCP + PKI remain
+T5:  User remediates (auto or guided); MDM/EDR reports healthy
+T6:  NAC sends CoA again; RESTRICTED → STANDARD role restored
+
+Target: P95 posture‑to‑enforcement latency < 15s campus‑wide (tune to your SLA).

@@ -1,0 +1,21 @@
+End‑to‑End Data Path — Managed Device (Standard Access)
+
+       [Wireless Client (Managed + Healthy)]
+                    |
+                (802.11)
+                    |
+                [Access Point]  (Transport only, no NAC enforcement)
+                    |
+                (Ethernet)
+                    |
+             [Access Switch Port]
+                    |              RADIUS MAB ----> |            \-----> [NAC / RADIUS]  (Policy decision)
+  (MAC Identity)    |                       |                      |                       |   \---> [Intune/Jamf] (enrolled+compliant?)
+        Apply dACL/Role/SGT <---------------/                    (STANDARD ACCESS)                                 \--> [CrowdStrike] (sensor healthy?)
+                    |
+             L2/L3 Switching
+          +---------------------+
+          |                     |
+   [Internal Networks]     [Internet via ZIA]
+         (allowed per           (ZIA client/tunnel enforces SaaS/Internet policy)
+          segmentation)

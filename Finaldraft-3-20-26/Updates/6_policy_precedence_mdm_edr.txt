@@ -1,0 +1,18 @@
+Policy Precedence — "MDM Decisive, EDR Required"
+
+                 +-------------------------------+
+                 |  Evaluate "Managed" Truth     |
+                 |  (MDM/UEM authority only)     |
+                 +-------------------------------+
+                        |                                     |              \-- False → RESTRICTED EGRESS
+                   True |
+                        v
+               +-----------------------+
+               | Evaluate EDR Health   |
+               | (CrowdStrike)         |
+               +-----------------------+
+                  |                               |              \-- Unhealthy → RESTRICTED EGRESS
+               Healthy
+                  |
+                  v
+             STANDARD ACCESS

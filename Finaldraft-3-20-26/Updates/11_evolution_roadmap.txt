@@ -1,0 +1,12 @@
+Evolution Roadmap — dACL → Role → SGT/TrustSec
+
+Phase 1 (Now):      Phase 2 (6–12 mo):           Phase 3 (12–24 mo):
+------------        ------------------           ---------------------
+dACL per-session    Role abstraction             SGT/TrustSec identity tags
+- NAC returns       - NAC returns role name      - NAC assigns SGT AVPair
+  named dACL        - Switch applies ACL objs    - Tags propagate upstream
+- Works everywhere  - Simplifies reuse           - Enforce policy in core/DC
+- Heavier TCAM      - Easier changes             - Minimal TCAM at edge
+
+Outcome trajectory:
+Less ACL sprawl → More intent-based policy → End-to-end identity segmentation

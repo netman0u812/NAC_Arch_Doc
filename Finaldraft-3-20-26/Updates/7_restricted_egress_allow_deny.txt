@@ -1,0 +1,21 @@
+Restricted Egress — Allow/Deny Overview (Conceptual)
+
+RESTRICTED EGRESS ALLOW-LIST (examples; maintain as code):
+
+  ALLOW:
+    - DNS:    udp any → any eq 53
+    - DHCP:   udp any ↔ any eq 67,68
+    - ZIA:    ip any → <zia_bootstrap_and_gateway_ranges_or_FQDNs>
+    - Intune: tcp/443 any → <intune_enrollment/mdm/policy_endpoints>
+    - Jamf:   tcp/443 any → <jamf_api/checkin_endpoints>
+    - CS:     tcp/443 any → <crowdstrike_cloud_endpoints>
+    - PKI:    tcp/80,443 any → <crl/ocsp/ca_endpoints> (if required)
+
+  DENY:
+    - ip any → RFC1918 (10/8, 172.16/12, 192.168/16)
+    - ip any → Datacenter/Private app ranges
+    - ip any → Internet (except ZIA bootstrap/gws above)
+
+Default: deny ip any any (log)
+
+Note: Prefer FQDN ACLs if supported; otherwise automate IP object generation from vendor feeds.

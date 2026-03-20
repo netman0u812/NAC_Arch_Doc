@@ -1,0 +1,308 @@
+Feature–Function–Dependency Implementation Plan (with Deliverables, Value, and Outcomes)
+0) Global Program Assumptions
+Technical deliverable: A documented target architecture and control taxonomy that declares NAC (ForeScout) the decision/orchestration plane, Intune/Jamf the definitive “managed” authority, CrowdStrike the runtime integrity source, and ZIA the universal Internet egress; enforcement is at access switches via MAB/CoA.
+Security function value deliverable: A single, unambiguous control model that binds device identity and posture to runtime authorization, enabling continuous verification regardless of attachment point.
+Impact outcome: Fewer architectural disputes and faster decisions; consistent controls across sites; predictable audit narratives and reduced exception sprawl.
+
+1) Device Discovery & Session Correlation
+Technical deliverable: NAC discovery pipeline that builds real‑time MAC↔IP bindings from DHCP/ARP, optionally augmented by RADIUS accounting and passive fingerprinting.
+Security function value deliverable: Reliable evidence of “what is on the network, right now” to anchor authorization and forensics.
+Impact outcome: Faster mean‑time‑to‑detect for rogue/unmanaged devices and fewer false positives in enforcement.
+1.1 Feature — NAC device discovery & correlation
+Technical deliverable: DHCP listener, ARP pollers, and (if available) accounting collectors configured and tested per VLAN/SSID.
+Security function value deliverable: Deterministic session context for each wireless client behind shared AP uplinks.
+Impact outcome: Clean, auditable session records that simplify incident reconstruction and policy decisions.
+1.2 Function
+Technical deliverable: Parsers and correlation rules to unify DHCP ACKs, ARP entries, and accounting into one session object.
+Security function value deliverable: Reduced identity ambiguity when multiple clients share the same AP uplink.
+Impact outcome: Lower enforcement error rate and smoother production rollouts.
+1.3 Dependencies
+Technical deliverable: DHCP snooping/DAI on access switches; NAC data collectors; optional SPAN/flow taps.
+Security function value deliverable: Anti‑spoofing baseline that protects identity bindings used for policy.
+Impact outcome: Fewer spoofing incidents and less time lost to false alarms.
+1.4 Validation / 1.5 Acceptance
+Technical deliverable: Test scripts and dashboards showing binding timeliness and fingerprint accuracy.
+Security function value deliverable: Evidence that discovery is fast enough to support near‑real‑time controls.
+Impact outcome: Confidence to proceed to authorization stages with measured SLAs.
+
+2) RADIUS MAB Admission & Authorization
+Technical deliverable: Per‑port MAB, AAA, and CoA configured on AP‑facing switchports with per‑client profiles (dACL/role/SGT).
+Security function value deliverable: Session‑oriented, revocable authorization bound to device identity.
+Impact outcome: Immediate posture‑driven access changes without VLAN churn or user disruption.
+2.1 Feature — MAB on AP uplinks
+Technical deliverable: Switch templates enabling MAB, AAA, device‑tracking, and dynamic‑authorization (CoA).
+Security function value deliverable: A standard path to accept/deny and attach policy attributes at connect time.
+Impact outcome: Consistent enforcement across heterogeneous AP/WLAN estates.
+2.2 Function
+Technical deliverable: RADIUS policy sets returning Standard or Restricted Egress profiles plus timers.
+Security function value deliverable: Clear, auditable authorization semantics (why, when, and how a device is allowed).
+Impact outcome: Reduced audit friction and faster approvals for future expansions.
+2.3 Dependencies
+Technical deliverable: Verified switch OS features (per‑client dACL, CoA), NAC RADIUS integration, NTP alignment.
+Security function value deliverable: Assurance that the enforcement plane will scale and respond predictably.
+Impact outcome: Avoided late‑stage surprises and rework.
+2.4 Validation / 2.5 Acceptance
+Technical deliverable: Lab tests proving <2s MAB decisions and <10s CoA flips under load.
+Security function value deliverable: Low‑latency posture enforcement consistent with Zero Trust.
+Impact outcome: SLA‑backed confidence for pilot cutover.
+
+3) Authoritative “Managed” Status via Intune & Jamf
+Technical deliverable: API integrations that return live enrollment/compliance and last check‑in, with staleness guards.
+Security function value deliverable: Unambiguous, real‑time truth for “managed” vs “unmanaged.”
+Impact outcome: Elimination of inventory‑based drift and policy disputes.
+3.1 Feature — Live MDM state
+Technical deliverable: Graph (Intune) and Jamf Pro connectors with least‑privilege app registrations.
+Security function value deliverable: Continuous device governance tied to the control planes that can revoke access.
+Impact outcome: Fewer unmanaged devices slipping through governance cracks.
+3.2 Function
+Technical deliverable: Normalized attributes (enrolled/compliant/check‑in/ownership) exposed in NAC conditions.
+Security function value deliverable: Deterministic gating criteria for authorization.
+Impact outcome: Fewer false‑restricts and clearer remediation guidance.
+3.3–3.5 Dependencies/Validation/Acceptance
+Technical deliverable: Identity mapping (hostname/serial/cert) and test harness comparing NAC vs MDM portals.
+Security function value deliverable: Trust that NAC decisions mirror MDM’s live view.
+Impact outcome: Audit‑ready alignment across systems of record.
+
+4) Runtime Assurance via CrowdStrike
+Technical deliverable: CrowdStrike API connector that returns presence, heartbeat, tamper status, and optional risk.
+Security function value deliverable: Runtime integrity gate that prevents “managed‑but‑unprotected” access.
+Impact outcome: Fewer incidents from disabled sensors or stale agents.
+4.1–4.5 Feature/Function/Dependencies/Validation/Acceptance
+Technical deliverable: Policy logic: Standard requires (MDM managed) AND (EDR healthy).
+Security function value deliverable: Defense‑in‑depth: management plus runtime health.
+Impact outcome: Material reduction in initial footholds and lateral movement attempts.
+
+5) ZIA‑Centered Restricted Egress
+Technical deliverable: A strict allow‑list profile permitting only ZIA bootstrap/gateways, Intune/Jamf, CrowdStrike, DNS/DHCP, and PKI/CRL/OCSP.
+Security function value deliverable: Quarantine‑as‑behavior that preserves remediation while eliminating internal reach.
+Impact outcome: Rapid self‑healing with near‑zero lateral movement risk.
+5.1–5.5 Feature/Function/Dependencies/Validation/Acceptance
+Technical deliverable: Object groups for ZIA/Intune/Jamf/CrowdStrike, with CI automation to refresh IP/FQDNs and compile dACLs/roles.
+Security function value deliverable: Stable enforcement despite SaaS endpoint churn.
+Impact outcome: Lower ops toil and fewer end‑user escalations during remediation.
+
+6) Role/SGT Evolution (Optional, Strategic)
+Technical deliverable: Migration plan from dACLs → named roles → SGT/TrustSec.
+Security function value deliverable: Identity‑based segmentation that scales beyond ACL limits.
+Impact outcome: Simpler policies, reduced TCAM pressure, and consistent upstream enforcement.
+
+7) CoA at Scale
+Technical deliverable: CoA queueing, retries, and metrics; switch dynamic‑auth hardened.
+Security function value deliverable: Predictable posture flips without session disruption.
+Impact outcome: P95 posture‑to‑enforcement latency within SLA during campus events and patch cycles.
+
+8) Identity Hardening at the Edge
+Technical deliverable: DHCP snooping, DAI, and port‑security baselines on access switches.
+Security function value deliverable: Resistance to MAC/IP spoof and ARP poisoning undermining NAC identity.
+Impact outcome: Tangible drop in identity evasion attempts and alert fatigue.
+
+9) Integrations: Intune, Jamf, CrowdStrike, ZIA
+Technical deliverable: Resilient connectors with timeouts, retries, and staleness rules; secret rotation.
+Security function value deliverable: No silent failures causing inadvertent fail‑open.
+Impact outcome: Fewer incidents tied to API wobbles; graceful degrade to Restricted Egress.
+
+10) Policy as Code & Object Management
+Technical deliverable: Git‑managed YAML/JSON objects for allow‑lists and roles; CI to compile & push via NAC API.
+Security function value deliverable: Reproducible policy with diffs, approvals, and rollbacks.
+Impact outcome: Faster, safer changes and a clear audit trail.
+
+11) Logging, Telemetry, and SIEM Correlation
+Technical deliverable: Unified telemetry: RADIUS/NAC decisions, switch syslog, MDM/EDR states, optional ZIA logs—correlated in SIEM.
+Security function value deliverable: End‑to‑end evidence of “who/what/when/why” for every authorization.
+Impact outcome: Faster investigations (MTTR) and smoother control attestations.
+
+12) Exception & Break‑Glass Management
+Technical deliverable: Time‑boxed roles, approval workflows, and SIEM alerts for exceptions.
+Security function value deliverable: Controlled deviation without eroding baseline controls.
+Impact outcome: Emergency continuity with bounded risk and strong oversight.
+
+13) Failure Modes & Graceful Degradation
+Technical deliverable: Runbooks and NAC logic for MDM/EDR/NAC outages (fail‑restricted by default).
+Security function value deliverable: Predictable behavior that never unintentionally fails open.
+Impact outcome: Reduced outage chaos and consistent user communications.
+
+14) Non‑User Devices (OT/IoT/BYOD)
+Technical deliverable: Fingerprint‑driven constrained roles (e.g., IoT‑Restricted) and guest/BYOD handling.
+Security function value deliverable: Least‑privilege access for non‑MDM devices without operational dead‑ends.
+Impact outcome: Lower risk from shadow/legacy devices while keeping operations functional.
+
+15) Deployment Sequencing & Cutover
+Technical deliverable: Lab → pilot → phased rollout with canaries, load tests, and rollback plans.
+Security function value deliverable: Progressive assurance that controls hold at scale.
+Impact outcome: Reliable, low‑drama production adoption with measurable KPIs.
+
+16) KPIs, SLAs, and Control Validation
+Technical deliverable: Dashboards and weekly reviews tracking time‑to‑restrict, time‑to‑remediate, % standard at connect, drift, and exceptions.
+Security function value deliverable: Continuous control validation and early anomaly detection.
+Impact outcome: Sustained posture with data‑backed confidence and improvement cycles.
+
+Cross‑Cutting Data & Policy Artifacts
+Technical deliverable: Source‑controlled object groups (obj.zia.gateways, obj.intune.core, obj.jamf.core, obj.crowdstrike.cloud, obj.pki.core, obj.rfc1918) and roles (role.standard, role.restricted_egress, role.break_glass, role.iot_restricted).
+Security function value deliverable: A single source of truth for enforcement targets and behaviors across vendors.
+Impact outcome: Consistency, speed, and fewer errors when making policy changes.
+
+RACI Snapshot (Abbrev.)
+Technical deliverable: Named owners for switch config, NAC policy, MDM posture, EDR health, app registrations, governance, and NOC runbooks.
+Security function value deliverable: Clear accountability that prevents control gaps at handoffs.
+Impact outcome: Faster execution and fewer “no one owns this” delays.
+
+Cutover Readiness—Go/No‑Go (Detailed but Not Sparse)
+Technical deliverable: Evidence pack showing MAB/CoA behavior, Restricted Egress correctness, integration health, CoA latency, identity hardening, CI pipelines, SIEM correlation, and runbook drills.
+Security function value deliverable: Proof that the architecture enforces Zero Trust as designed under normal and degraded conditions.
+Impact outcome: Confident CAB approval and a predictable rollout experience.
+
+Want me to package this as a sectioned implementation plan (DOCX) with your logo, page headers/footers, and an evidence checklist appendix?
+Feature–Function–Dependency Implementation Plan (with Deliverables, Value, and Outcomes)
+0) Global Program Assumptions
+Technical deliverable: A documented target architecture and control taxonomy that declares NAC (ForeScout) the decision/orchestration plane, Intune/Jamf the definitive “managed” authority, CrowdStrike the runtime integrity source, and ZIA the universal Internet egress; enforcement is at access switches via MAB/CoA.
+Security function value deliverable: A single, unambiguous control model that binds device identity and posture to runtime authorization, enabling continuous verification regardless of attachment point.
+Impact outcome: Fewer architectural disputes and faster decisions; consistent controls across sites; predictable audit narratives and reduced exception sprawl.
+
+1) Device Discovery & Session Correlation
+Technical deliverable: NAC discovery pipeline that builds real‑time MAC↔IP bindings from DHCP/ARP, optionally augmented by RADIUS accounting and passive fingerprinting.
+Security function value deliverable: Reliable evidence of “what is on the network, right now” to anchor authorization and forensics.
+Impact outcome: Faster mean‑time‑to‑detect for rogue/unmanaged devices and fewer false positives in enforcement.
+1.1 Feature — NAC device discovery & correlation
+Technical deliverable: DHCP listener, ARP pollers, and (if available) accounting collectors configured and tested per VLAN/SSID.
+Security function value deliverable: Deterministic session context for each wireless client behind shared AP uplinks.
+Impact outcome: Clean, auditable session records that simplify incident reconstruction and policy decisions.
+1.2 Function
+Technical deliverable: Parsers and correlation rules to unify DHCP ACKs, ARP entries, and accounting into one session object.
+Security function value deliverable: Reduced identity ambiguity when multiple clients share the same AP uplink.
+Impact outcome: Lower enforcement error rate and smoother production rollouts.
+1.3 Dependencies
+Technical deliverable: DHCP snooping/DAI on access switches; NAC data collectors; optional SPAN/flow taps.
+Security function value deliverable: Anti‑spoofing baseline that protects identity bindings used for policy.
+Impact outcome: Fewer spoofing incidents and less time lost to false alarms.
+1.4 Validation / 1.5 Acceptance
+Technical deliverable: Test scripts and dashboards showing binding timeliness and fingerprint accuracy.
+Security function value deliverable: Evidence that discovery is fast enough to support near‑real‑time controls.
+Impact outcome: Confidence to proceed to authorization stages with measured SLAs.
+
+2) RADIUS MAB Admission & Authorization
+Technical deliverable: Per‑port MAB, AAA, and CoA configured on AP‑facing switchports with per‑client profiles (dACL/role/SGT).
+Security function value deliverable: Session‑oriented, revocable authorization bound to device identity.
+Impact outcome: Immediate posture‑driven access changes without VLAN churn or user disruption.
+2.1 Feature — MAB on AP uplinks
+Technical deliverable: Switch templates enabling MAB, AAA, device‑tracking, and dynamic‑authorization (CoA).
+Security function value deliverable: A standard path to accept/deny and attach policy attributes at connect time.
+Impact outcome: Consistent enforcement across heterogeneous AP/WLAN estates.
+2.2 Function
+Technical deliverable: RADIUS policy sets returning Standard or Restricted Egress profiles plus timers.
+Security function value deliverable: Clear, auditable authorization semantics (why, when, and how a device is allowed).
+Impact outcome: Reduced audit friction and faster approvals for future expansions.
+2.3 Dependencies
+Technical deliverable: Verified switch OS features (per‑client dACL, CoA), NAC RADIUS integration, NTP alignment.
+Security function value deliverable: Assurance that the enforcement plane will scale and respond predictably.
+Impact outcome: Avoided late‑stage surprises and rework.
+2.4 Validation / 2.5 Acceptance
+Technical deliverable: Lab tests proving <2s MAB decisions and <10s CoA flips under load.
+Security function value deliverable: Low‑latency posture enforcement consistent with Zero Trust.
+Impact outcome: SLA‑backed confidence for pilot cutover.
+
+3) Authoritative “Managed” Status via Intune & Jamf
+Technical deliverable: API integrations that return live enrollment/compliance and last check‑in, with staleness guards.
+Security function value deliverable: Unambiguous, real‑time truth for “managed” vs “unmanaged.”
+Impact outcome: Elimination of inventory‑based drift and policy disputes.
+3.1 Feature — Live MDM state
+Technical deliverable: Graph (Intune) and Jamf Pro connectors with least‑privilege app registrations.
+Security function value deliverable: Continuous device governance tied to the control planes that can revoke access.
+Impact outcome: Fewer unmanaged devices slipping through governance cracks.
+3.2 Function
+Technical deliverable: Normalized attributes (enrolled/compliant/check‑in/ownership) exposed in NAC conditions.
+Security function value deliverable: Deterministic gating criteria for authorization.
+Impact outcome: Fewer false‑restricts and clearer remediation guidance.
+3.3–3.5 Dependencies/Validation/Acceptance
+Technical deliverable: Identity mapping (hostname/serial/cert) and test harness comparing NAC vs MDM portals.
+Security function value deliverable: Trust that NAC decisions mirror MDM’s live view.
+Impact outcome: Audit‑ready alignment across systems of record.
+
+4) Runtime Assurance via CrowdStrike
+Technical deliverable: CrowdStrike API connector that returns presence, heartbeat, tamper status, and optional risk.
+Security function value deliverable: Runtime integrity gate that prevents “managed‑but‑unprotected” access.
+Impact outcome: Fewer incidents from disabled sensors or stale agents.
+4.1–4.5 Feature/Function/Dependencies/Validation/Acceptance
+Technical deliverable: Policy logic: Standard requires (MDM managed) AND (EDR healthy).
+Security function value deliverable: Defense‑in‑depth: management plus runtime health.
+Impact outcome: Material reduction in initial footholds and lateral movement attempts.
+
+5) ZIA‑Centered Restricted Egress
+Technical deliverable: A strict allow‑list profile permitting only ZIA bootstrap/gateways, Intune/Jamf, CrowdStrike, DNS/DHCP, and PKI/CRL/OCSP.
+Security function value deliverable: Quarantine‑as‑behavior that preserves remediation while eliminating internal reach.
+Impact outcome: Rapid self‑healing with near‑zero lateral movement risk.
+5.1–5.5 Feature/Function/Dependencies/Validation/Acceptance
+Technical deliverable: Object groups for ZIA/Intune/Jamf/CrowdStrike, with CI automation to refresh IP/FQDNs and compile dACLs/roles.
+Security function value deliverable: Stable enforcement despite SaaS endpoint churn.
+Impact outcome: Lower ops toil and fewer end‑user escalations during remediation.
+
+6) Role/SGT Evolution (Optional, Strategic)
+Technical deliverable: Migration plan from dACLs → named roles → SGT/TrustSec.
+Security function value deliverable: Identity‑based segmentation that scales beyond ACL limits.
+Impact outcome: Simpler policies, reduced TCAM pressure, and consistent upstream enforcement.
+
+7) CoA at Scale
+Technical deliverable: CoA queueing, retries, and metrics; switch dynamic‑auth hardened.
+Security function value deliverable: Predictable posture flips without session disruption.
+Impact outcome: P95 posture‑to‑enforcement latency within SLA during campus events and patch cycles.
+
+8) Identity Hardening at the Edge
+Technical deliverable: DHCP snooping, DAI, and port‑security baselines on access switches.
+Security function value deliverable: Resistance to MAC/IP spoof and ARP poisoning undermining NAC identity.
+Impact outcome: Tangible drop in identity evasion attempts and alert fatigue.
+
+9) Integrations: Intune, Jamf, CrowdStrike, ZIA
+Technical deliverable: Resilient connectors with timeouts, retries, and staleness rules; secret rotation.
+Security function value deliverable: No silent failures causing inadvertent fail‑open.
+Impact outcome: Fewer incidents tied to API wobbles; graceful degrade to Restricted Egress.
+
+10) Policy as Code & Object Management
+Technical deliverable: Git‑managed YAML/JSON objects for allow‑lists and roles; CI to compile & push via NAC API.
+Security function value deliverable: Reproducible policy with diffs, approvals, and rollbacks.
+Impact outcome: Faster, safer changes and a clear audit trail.
+
+11) Logging, Telemetry, and SIEM Correlation
+Technical deliverable: Unified telemetry: RADIUS/NAC decisions, switch syslog, MDM/EDR states, optional ZIA logs—correlated in SIEM.
+Security function value deliverable: End‑to‑end evidence of “who/what/when/why” for every authorization.
+Impact outcome: Faster investigations (MTTR) and smoother control attestations.
+
+12) Exception & Break‑Glass Management
+Technical deliverable: Time‑boxed roles, approval workflows, and SIEM alerts for exceptions.
+Security function value deliverable: Controlled deviation without eroding baseline controls.
+Impact outcome: Emergency continuity with bounded risk and strong oversight.
+
+13) Failure Modes & Graceful Degradation
+Technical deliverable: Runbooks and NAC logic for MDM/EDR/NAC outages (fail‑restricted by default).
+Security function value deliverable: Predictable behavior that never unintentionally fails open.
+Impact outcome: Reduced outage chaos and consistent user communications.
+
+14) Non‑User Devices (OT/IoT/BYOD)
+Technical deliverable: Fingerprint‑driven constrained roles (e.g., IoT‑Restricted) and guest/BYOD handling.
+Security function value deliverable: Least‑privilege access for non‑MDM devices without operational dead‑ends.
+Impact outcome: Lower risk from shadow/legacy devices while keeping operations functional.
+
+15) Deployment Sequencing & Cutover
+Technical deliverable: Lab → pilot → phased rollout with canaries, load tests, and rollback plans.
+Security function value deliverable: Progressive assurance that controls hold at scale.
+Impact outcome: Reliable, low‑drama production adoption with measurable KPIs.
+
+16) KPIs, SLAs, and Control Validation
+Technical deliverable: Dashboards and weekly reviews tracking time‑to‑restrict, time‑to‑remediate, % standard at connect, drift, and exceptions.
+Security function value deliverable: Continuous control validation and early anomaly detection.
+Impact outcome: Sustained posture with data‑backed confidence and improvement cycles.
+
+Cross‑Cutting Data & Policy Artifacts
+Technical deliverable: Source‑controlled object groups (obj.zia.gateways, obj.intune.core, obj.jamf.core, obj.crowdstrike.cloud, obj.pki.core, obj.rfc1918) and roles (role.standard, role.restricted_egress, role.break_glass, role.iot_restricted).
+Security function value deliverable: A single source of truth for enforcement targets and behaviors across vendors.
+Impact outcome: Consistency, speed, and fewer errors when making policy changes.
+
+RACI Snapshot (Abbrev.)
+Technical deliverable: Named owners for switch config, NAC policy, MDM posture, EDR health, app registrations, governance, and NOC runbooks.
+Security function value deliverable: Clear accountability that prevents control gaps at handoffs.
+Impact outcome: Faster execution and fewer “no one owns this” delays.
+
+Cutover Readiness—Go/No‑Go (Detailed but Not Sparse)
+Technical deliverable: Evidence pack showing MAB/CoA behavior, Restricted Egress correctness, integration health, CoA latency, identity hardening, CI pipelines, SIEM correlation, and runbook drills.
+Security function value deliverable: Proof that the architecture enforces Zero Trust as designed under normal and degraded conditions.
+Impact outcome: Confident CAB approval and a predictable rollout experience.
+
+Want me to package this as a sectioned implementation plan (DOCX) with your logo, page headers/footers, and an evidence checklist appendix?

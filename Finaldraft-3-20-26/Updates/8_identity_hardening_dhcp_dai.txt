@@ -1,0 +1,17 @@
+Identity Hardening — DHCP Snooping + DAI
+
+         [Client]
+            |
+         (DHCP)
+            v
+      [Access Switch]  -- DHCP Snooping -->  Binding Table (MAC,IP,VLAN,Port)
+            |
+          (ARP)
+            v
+      DAI checks ARP against Binding Table:
+           +----------------------------------------+
+           | If ARP matches binding → forward       |
+           | If mismatch/spoof → drop + log (DAI)   |
+           +----------------------------------------+
+
+Result: MAC/IP identity used by NAC for per-client policy is protected from spoofing/poisoning.
